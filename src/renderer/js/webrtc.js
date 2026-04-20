@@ -11,23 +11,21 @@ class WebRTCManager {
     this.remoteStream = null;
     this.handlers = {};
 
-    // Enhanced STUN servers and WebRTC optimizations
+    // High-performance curated STUN servers for faster gathering
     this.config = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun.anydesk.com:3478' },
-        { urls: 'stun:stun.ekiga.net' },
-        { urls: 'stun:stun.ideasip.com' },
-        { urls: 'stun:stun.schlund.de' },
-        { urls: 'stun:stun.voiparound.com' },
-        { urls: 'stun:stun.voipbuster.com' },
-        { urls: 'stun:stun.voipstunt.com' }
+        { urls: 'stun:stun.cloudflare.com:3478' },
+        { urls: 'stun:stun.services.mozilla.com' }
       ],
       iceCandidatePoolSize: 10,
       bundlePolicy: 'max-bundle'
     };
+
+    // Candidate handling queue
+    this.iceQueue = [];
+    this.isRemoteDescriptionSet = false;
   }
 
   async initializeConnection(isOfferer = false) {
@@ -101,25 +99,65 @@ class WebRTCManager {
 
   // ── Connection Logic ──
   async createOffer() {
-    const offer = await this.peerConnection.createOffer();
+    let offer = await this.peerConnection.createOffer();
+    offer = { type: 'offer', sdp: this._mungSDP(offer.sdp) };
     await this.peerConnection.setLocalDescription(offer);
     return offer;
   }
 
   async handleOffer(offer) {
     await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await this.peerConnection.createAnswer();
+    this.isRemoteDescriptionSet = true;
+    await this._processIceQueue();
+    let answer = await this.peerConnection.createAnswer();
+    answer = { type: 'answer', sdp: this._mungSDP(answer.sdp) };
     await this.peerConnection.setLocalDescription(answer);
     return answer;
   }
 
+  // Optimize SDP for faster initial connection and stable bitrate
+  _mungSDP(sdp) {
+    // Set max video bitrate to 2500kbps initially for stability
+    const bitrate = 2500;
+    if (sdp.indexOf('b=AS:') === -1) {
+      sdp = sdp.replace(/m=video(.*)\r\n/g, `m=video$1\r\nb=AS:${bitrate}\r\n`);
+    } else {
+      sdp = sdp.replace(/b=AS:.*\r\n/g, `b=AS:${bitrate}\r\n`);
+    }
+    return sdp;
+  }
+
   async handleAnswer(answer) {
     await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+    this.isRemoteDescriptionSet = true;
+    await this._processIceQueue();
   }
 
   async addIceCandidate(candidate) {
-    if (this.peerConnection) {
+    if (!this.peerConnection) return;
+
+    if (!this.isRemoteDescriptionSet) {
+      console.log('[!] Queueing ICE candidate (waiting for remote description)');
+      this.iceQueue.push(candidate);
+      return;
+    }
+
+    try {
       await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (e) {
+      console.error('Error adding ICE candidate:', e);
+    }
+  }
+
+  async _processIceQueue() {
+    console.log(`[!] Processing ${this.iceQueue.length} queued candidates`);
+    while (this.iceQueue.length > 0) {
+      const candidate = this.iceQueue.shift();
+      try {
+        await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (e) {
+        console.error('Error adding queued ICE candidate:', e);
+      }
     }
   }
 

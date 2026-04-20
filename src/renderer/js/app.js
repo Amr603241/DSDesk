@@ -91,11 +91,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentRemoteDeviceId = hostDeviceId;
 
         ui.showToast('تم قبول الاتصال، جاري التجهيز...', 'success');
-        ui.setConnectingOverlay(true, 'تجهيز اتصال WebRTC...');
+        ui.setConnectingOverlay(true, 'جاري البحث عن العميل (ICE)...');
+        ui.setConnectingOverlay(true, 'تجهيز مسار الشبكة (Signaling)...');
         ui.switchView('session');
 
         // Start WebRTC as client (viewer)
         await webrtc.initializeConnection(true); // true = creator of data channel
+        ui.setConnectingOverlay(true, 'جاري بناء الاتصال المشفر...');
         const offer = await webrtc.createOffer();
         signaling.sendOffer(hostSocketId, offer);
     });
@@ -115,10 +117,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     signaling.on('offer', async ({ from, offer }) => {
         if (isHost) {
             await webrtc.initializeConnection(false);
+            ui.setConnectingOverlay(true, 'جاري بدء بث الشاشة...');
             await webrtc.startScreenShare();
+            ui.setConnectingOverlay(true, 'تأمين تدفق الفيديو (P2P)...');
             const answer = await webrtc.handleOffer(offer);
             signaling.sendAnswer(from, answer);
-            ui.setConnectingOverlay(true, 'تم الاتصال، جاري بث الشاشة...');
+            ui.setConnectingOverlay(true, 'بانتظام الاتصال النهائي...');
         }
     });
 
@@ -280,7 +284,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function resetConnectionUI() {
-        document.getElementById('btn-connect').disabled = false;
+        // Reset states
+        webrtc.isRemoteDescriptionSet = false;
+        webrtc.iceQueue = [];
+        
+        ui.elements.btnConnect.disabled = false;
         document.getElementById('btn-connect-content').classList.remove('hidden');
         document.getElementById('btn-connect-loader').classList.add('hidden');
     }
