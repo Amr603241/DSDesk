@@ -5,7 +5,7 @@
 
 class SignalingClient {
   constructor(serverUrl) {
-    this.serverUrl = serverUrl || 'http://localhost:3456';
+    this.serverUrl = serverUrl || 'http://127.0.0.1:8080';
     this.socket = null;
     this.deviceId = null;
     this.password = null;

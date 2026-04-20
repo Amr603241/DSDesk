@@ -24,6 +24,7 @@ class UIManager {
       toastContainer: document.getElementById('toast-container'),
       connectingOverlay: document.getElementById('connecting-overlay'),
       connectingStatus: document.getElementById('connecting-status'),
+      remoteVideo: document.getElementById('remote-video'),
       modalRequest: document.getElementById('modal-request'),
       requestFromId: document.getElementById('request-from-id'),
       btnConnect: document.getElementById('btn-connect'),
@@ -131,6 +132,7 @@ class UIManager {
 
   displayRemoteVideo(stream) {
     this.elements.remoteVideo.srcObject = stream;
+    this.elements.remoteVideo.play().catch(e => console.error("[UI] Video Play Error:", e));
   }
 }
 

@@ -26,6 +26,11 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log(`[+] Client connected: ${socket.id}`);
 
+  // Verbose trace for everything
+  socket.onAny((eventName, ...args) => {
+    console.log(`[RAW] Event: ${eventName} from ${socket.id.substring(0,6)}`, args);
+  });
+
   // ── Register device ──
   socket.on('register', ({ deviceId, password, passwordEnabled }) => {
     devices.set(deviceId, {
@@ -51,6 +56,15 @@ io.on('connection', (socket) => {
   // ── Connection request from client to host ──
   socket.on('connect-to', ({ targetId, password }) => {
     const target = devices.get(targetId);
+
+    if (targetId === socket.deviceId) {
+      socket.emit('connection-error', {
+        message: 'لا يمكنك الاتصال بنفس هذا الجهاز (حلقة ربط مغلقة)',
+        code: 'SELF_CONNECT'
+      });
+      console.log(`[!] Blocked self-connection attempt from: ${socket.deviceId}`);
+      return;
+    }
 
     if (!target) {
       socket.emit('connection-error', {
@@ -104,7 +118,8 @@ io.on('connection', (socket) => {
 
   // ── WebRTC Signaling: SDP Offer ──
   socket.on('offer', ({ target, offer }) => {
-    io.to(target).emit('offer', {
+    console.log(`[SIG] Offer: ${socket.id.substring(0,5)} → ${target.substring(0,5)}`);
+    socket.to(target).emit('offer', {
       from: socket.id,
       offer: offer
     });
@@ -112,7 +127,8 @@ io.on('connection', (socket) => {
 
   // ── WebRTC Signaling: SDP Answer ──
   socket.on('answer', ({ target, answer }) => {
-    io.to(target).emit('answer', {
+    console.log(`[SIG] Answer: ${socket.id.substring(0,5)} → ${target.substring(0,5)}`);
+    socket.to(target).emit('answer', {
       from: socket.id,
       answer: answer
     });
@@ -120,7 +136,7 @@ io.on('connection', (socket) => {
 
   // ── WebRTC Signaling: ICE Candidate ──
   socket.on('ice-candidate', ({ target, candidate }) => {
-    io.to(target).emit('ice-candidate', {
+    socket.to(target).emit('ice-candidate', {
       from: socket.id,
       candidate: candidate
     });

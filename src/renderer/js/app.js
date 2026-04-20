@@ -4,16 +4,48 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Global Error Catcher
+    window.onerror = function(msg, url, line) {
+        if (window.logDebugToApp) window.logDebugToApp(`CRASH: ${msg} at ${line}`, 'error');
+        return false;
+    };
+
     const ui = new UIManager();
-    
-    // Load server settings
+
+    // ── Diagnostics Initialization ──
+    const debugContent = document.getElementById('debug-content');
+    const logDebug = (msg, level = 'info') => {
+        if (!debugContent) return;
+        const time = new Date().toLocaleTimeString();
+        const line = document.createElement('div');
+        line.style.color = level === 'error' ? '#ff4d4d' : level === 'warn' ? '#ffcc00' : '#00f2fe';
+        line.textContent = `[${time}] ${msg}`;
+        debugContent.appendChild(line);
+        debugContent.scrollTop = debugContent.scrollHeight;
+        console.log(`[DEBUG] ${msg}`);
+    };
+    window.logDebugToApp = logDebug;
+
+    const logInitial = (msg) => logDebug(`[INIT] ${msg}`);
+    logInitial('JS Core Engine Started');
+    // GLOBAL PRODUCTION SERVER
     const DEFAULT_SERVER = 'https://dsdesk.onrender.com';
-    let savedServerUrl = localStorage.getItem('serverUrl') || DEFAULT_SERVER;
-    document.getElementById('server-url').value = savedServerUrl;
-    document.getElementById('server-url').placeholder = DEFAULT_SERVER;
+    logInitial('Configuring Signaling Path (GLOBAL)...');
+    
+    let savedServerUrl = DEFAULT_SERVER;
+    const serverUrlInput = document.getElementById('server-url');
+    if (serverUrlInput) {
+        serverUrlInput.value = savedServerUrl;
+        serverUrlInput.parentElement?.classList.add('hidden');
+    }
     
     const signaling = new SignalingClient(savedServerUrl);
-    const webrtc = new WebRTCManager();
+    let webrtc;
+    try {
+        webrtc = new WebRTCManager();
+    } catch (rtcErr) {
+        logInitial(`WebRTC Init Error: ${rtcErr.message}`);
+    }
 
     let deviceId = '';
     let password = '';
@@ -30,33 +62,40 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── App Initialization ──
     try {
+        logDebug(`[PHASE 1] Connecting to Main Process...`);
         deviceId = await window.dsdesk.getDeviceId();
         password = await window.dsdesk.getPassword();
         passwordEnabled = await window.dsdesk.getPasswordEnabled();
         
-        const stats = await window.dsdesk.getSystemStats();
-        hostname = stats.hostname;
-        osInfo = stats.osName;
-
-        document.getElementById('device-hostname').innerText = hostname;
-        document.getElementById('device-os-info').innerText = osInfo;
-        
+        logDebug(`[PHASE 2] Device Ready: ${deviceId}`);
         ui.updateDeviceInfo(deviceId, password);
         ui.setPasswordEnabled(passwordEnabled);
-
-        // Check Installation Status (AnyDesk style)
-        const isInstalled = await window.dsdesk.getInstallStatus();
-        if (!isInstalled) {
-            document.getElementById('install-banner').classList.remove('hidden');
-        }
-
+        
+        ui.showToast('جاري الاتصال... [1/2]', 'info');
+        logDebug(`[PHASE 3] Attempting connection to signaling...`);
+        
         await signaling.connect();
+        
+        ui.showToast('جاري التسجيل... [2/2]', 'info');
+        logDebug(`[PHASE 4] Connection established. Registering...`);
+        
         signaling.register(deviceId, password, passwordEnabled);
         ui.setConnectionStatus(true, 'متصل');
+        logDebug(`[SUCCESS] Device online.`);
+
+        // Deferred stats initialization
+        logDebug(`[STATS] Fetching system info...`);
+        window.dsdesk.getSystemStats().then(stats => {
+            hostname = stats.hostname;
+            osInfo = stats.osName;
+            document.getElementById('device-hostname').innerText = hostname;
+            document.getElementById('device-os-info').innerText = osInfo;
+            logDebug(`[STATS] System info updated`);
+        });
     } catch (err) {
-        console.error('Initialization failed:', err);
-        ui.showToast('فشل الاتصال بخادم الإشارات', 'error');
-        ui.setConnectionStatus(false, 'خطأ في الاتصال');
+        logDebug(`[FATAL ERROR] Signaling phase failed: ${err.message}`, 'error');
+        ui.showToast('عذراً: السيرفر لا يستجيب. تأكد من تشغيله.', 'error');
+        ui.setConnectionStatus(false, 'خطأ في الربط');
     }
 
     // ── Signaling Events ──
@@ -85,21 +124,123 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // ── Connection Form Handling ──
+    const remoteIdInput = document.getElementById('remote-id');
+    const connectBtn = document.getElementById('btn-connect');
+
+    remoteIdInput.addEventListener('input', (e) => {
+        // Format input: 123 456 789 or 123 456 789-560
+        let val = e.target.value.replace(/[^0-9-]/g, ''); // Allow digits and hyphen
+        
+        // Logical cap: 9 digits + optional hyphen + 3 digits
+        if (val.length > 13) val = val.substring(0, 13);
+        
+        e.target.value = val;
+
+        // Enable button if we have at least 9 digits (ignoring hyphen)
+        const digitsOnly = val.replace(/\D/g, '');
+        connectBtn.disabled = digitsOnly.length < 9;
+    });
+
+    ui.elements.connectForm.onsubmit = (e) => {
+        e.preventDefault();
+        const targetId = document.getElementById('remote-id').value.trim();
+        const targetIdNumeric = targetId.replace(/\D/g, '');
+        const myIdNumeric = (deviceId || '').replace(/\D/g, '');
+
+        if (!targetId) return ui.showToast('الرجاء إدخال رقم الهوية', 'error');
+        
+        logDebug(`[CONNECT] Local: ${myIdNumeric} vs Target: ${targetIdNumeric}`);
+
+        if (targetIdNumeric === myIdNumeric && myIdNumeric !== '') {
+            logDebug(`[WARN] SELF-CONNECTION BLOCKED: ${targetId}`, 'warn');
+            return ui.showToast('لا يمكنك الاتصال بهذا الجهاز (أنت تحاول الاتصال بنفسك). جرب الرقم الظاهر في النافذة الثانية.', 'warn');
+        }
+
+        console.log(`[APP] Initiating connection to: ${targetId}`);
+        ui.setConnectingOverlay(true, 'تجهيز مسار الشبكة (Signaling)...');
+        signaling.requestConnection(targetId, targetPwd);
+
+        // Connection Timeout Safeguard
+        const connectionTimeout = setTimeout(() => {
+            if (ui.elements.connectingOverlay.classList.contains('active') || 
+                !ui.elements.connectingOverlay.classList.contains('hidden')) {
+                console.error('[APP] Connection Handshake TIMEOUT (15s)');
+                ui.showToast('فشل الاتصال: انتهت مهلة الانتظار. تأكد من أن الطرف الآخر متصل.', 'error');
+                ui.setConnectingOverlay(false);
+            }
+        }, 15000);
+
+        signaling.on('connection-accepted', () => clearTimeout(connectionTimeout));
+        signaling.on('connection-rejected', () => clearTimeout(connectionTimeout));
+        signaling.on('connection-error', () => clearTimeout(connectionTimeout));
+    };
+
+    // ── Global Handlers ──
+
+    // Clipboard Logic - Wire both buttons
+    const handleCopyId = () => {
+        const idElement = document.getElementById('device-id');
+        const id = idElement?.textContent || '';
+        if (id && id !== '--- --- ---') {
+            const rawId = id.replace(/\s+/g, '');
+            window.dsdesk.writeClipboard(rawId);
+            ui.showToast(`تم نسخ المعرّف: ${rawId}`, 'success');
+            logDebug(`[CLIPBOARD] ID copied to clipboard: ${rawId}`);
+        } else {
+            ui.showToast('المعرّف غير جاهز بعد', 'warn');
+        }
+    };
+
+    const btnCopyId = document.getElementById('btn-copy-id');
+    if (btnCopyId) btnCopyId.onclick = handleCopyId;
+
+    const btnCopyIdTop = document.getElementById('btn-copy-id-top');
+    if (btnCopyIdTop) btnCopyIdTop.onclick = handleCopyId;
+
+    const btnCopyLogs = document.getElementById('btn-copy-logs');
+    if (btnCopyLogs) {
+        btnCopyLogs.onclick = () => {
+            if (!debugContent) return ui.showToast('سجل التشخيص غير متوفر', 'error');
+            const logs = debugContent.innerText || debugContent.textContent;
+            window.dsdesk.writeClipboard(logs);
+            ui.showToast('تم نسخ سجل التشخيص بنجاح', 'success');
+            logDebug(`[CLIPBOARD] Logs copied to clipboard`);
+        };
+    }
+
+    const btnShowDebug = document.getElementById('btn-show-debug');
+    if (btnShowDebug) {
+        btnShowDebug.onclick = () => {
+            document.getElementById('debug-overlay').classList.toggle('hidden');
+        };
+    }
+
     signaling.on('connection-accepted', async ({ hostSocketId, hostDeviceId }) => {
+        logDebug(`Connection ACCEPTED by host: ${hostDeviceId}`);
         isHost = false;
         currentRemoteSocketId = hostSocketId;
         currentRemoteDeviceId = hostDeviceId;
 
         ui.showToast('تم قبول الاتصال، جاري التجهيز...', 'success');
-        ui.setConnectingOverlay(true, 'جاري البحث عن العميل (ICE)...');
-        ui.setConnectingOverlay(true, 'تجهيز مسار الشبكة (Signaling)...');
+        ui.setConnectingOverlay(true, 'تجهيز مسار الشبكة (Modern)...');
         ui.switchView('session');
 
-        // Start WebRTC as client (viewer)
-        await webrtc.initializeConnection(true); // true = creator of data channel
-        ui.setConnectingOverlay(true, 'جاري بناء الاتصال المشفر...');
-        const offer = await webrtc.createOffer();
-        signaling.sendOffer(hostSocketId, offer);
+        try {
+            // Modern Unified: Start as viewer
+            await webrtc.initializeConnection(true, 'viewer'); 
+            logDebug('WebRTC initialized as Viewer (Unified Plan)');
+            
+            ui.setConnectingOverlay(true, 'فتح قناة البيانات المشفرة...');
+            const offer = await webrtc.createOffer();
+            logDebug('SDP Offer created successfully');
+            
+            signaling.sendOffer(hostSocketId, offer);
+            logDebug('SDP Offer sent to host');
+        } catch (err) {
+            logDebug(`Handshake FAILED: ${err.message}`, 'error');
+            ui.showToast('خطأ في بناء الاتصال: راجع سجل التشخيص', 'error');
+        }
     });
 
     signaling.on('connection-rejected', ({ message }) => {
@@ -115,22 +256,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ── WebRTC Signaling ──
 
     signaling.on('offer', async ({ from, offer }) => {
+        logDebug(`RECEIVED Offer from: ${from}`);
         if (isHost) {
-            await webrtc.initializeConnection(false);
-            ui.setConnectingOverlay(true, 'جاري بدء بث الشاشة...');
-            await webrtc.startScreenShare();
-            ui.setConnectingOverlay(true, 'تأمين تدفق الفيديو (P2P)...');
-            const answer = await webrtc.handleOffer(offer);
-            signaling.sendAnswer(from, answer);
-            ui.setConnectingOverlay(true, 'بانتظام الاتصال النهائي...');
+            currentRemoteSocketId = from;
+            try {
+                logDebug('[HOST] Starting WebRTC Initialization...');
+                await webrtc.initializeConnection(false, 'host'); 
+                logDebug('[HOST] WebRTC Initialized successfully');
+                
+                ui.setConnectingOverlay(true, 'تجهيز لقطة الشاشة (Atomic)...');
+                logDebug('[HOST] Requesting screen source...');
+                await webrtc.startScreenShare();
+                logDebug('[HOST] Screen capture ACTIVE');
+                
+                ui.setConnectingOverlay(true, 'تأمين الاتصال المشفر (P2P)...');
+                logDebug('[HOST] Processing remote offer...');
+                const answer = await webrtc.handleOffer(offer);
+                logDebug('[HOST] Answer created, sending to viewer');
+                
+                signaling.sendAnswer(from, answer);
+                logDebug('[HOST] Handshake COMPLETE');
+            } catch (err) {
+                logDebug(`[HOST] FATAL HANDSHAKE ERROR: ${err.message}`, 'error');
+                ui.showToast('فشل في بدء البث: راجع التشخيص', 'error');
+            }
+        } else {
+            logDebug('[Viewer] Unexpected offer received while in viewer mode', 'warn');
         }
     });
 
     signaling.on('answer', async ({ from, answer }) => {
-        await webrtc.handleAnswer(answer);
+        logDebug(`RECEIVED Answer from socket: ${from.substring(0,6)}`);
+        try {
+            await webrtc.handleAnswer(answer);
+            logDebug(`[P2P] Remote description set (Answer). Link Establishing...`);
+        } catch (err) {
+            logDebug(`[P2P ERROR] Failed to set answer: ${err.message}`, 'error');
+        }
     });
 
     signaling.on('ice-candidate', async ({ from, candidate }) => {
+        // logDebug(`RECEIVED ICE from: ${from.substring(0, 5)}...`);
         await webrtc.addIceCandidate(candidate);
     });
 
@@ -138,14 +304,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     webrtc.on('ice-candidate', (candidate) => {
         if (currentRemoteSocketId) {
+            console.log(`[APP] SENDING ICE Candidate to: ${currentRemoteSocketId}`);
             signaling.sendIceCandidate(currentRemoteSocketId, candidate);
+        } else {
+            console.warn('[APP] ICE Candidate gathered but currentRemoteSocketId is NULL!');
+        }
+    });
+
+    webrtc.on('ice-state-change', (state) => {
+        logDebug(`[P2P STATE] ${state}`);
+        if (state === 'connected' || state === 'completed') {
+            ui.showToast('تم الاتصال بنجاح!', 'success');
+            ui.switchView('session');
+            ui.setConnectingOverlay(false);
+            logDebug(`[SUCCESS] Peer-to-Peer Link Active`);
+        } else if (state === 'failed') {
+            ui.showToast('فشل ربط المسار (ICE Failed)', 'error');
+            ui.setConnectingOverlay(false);
         }
     });
 
     webrtc.on('remote-stream', (stream) => {
         ui.displayRemoteVideo(stream);
         ui.setConnectingOverlay(false);
-        ui.showToast('متصل بنجاح', 'success');
+        ui.showToast('متصل بنجاح (وضع التوربو)', 'success');
     });
 
     webrtc.on('datachannel-open', () => {
@@ -209,17 +391,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (isHost || !currentRemoteSocketId) return;
 
         const rect = remoteVideo.getBoundingClientRect();
-        // Calculate relative coordinates in percentage, but we need absolute for host.
-        // Actually, let's send normalized coords (0-1) and host will scale to its screen resolution.
-        // But for simplicity, we'll try to get host screen size later.
-        // For now, let's assume host screen size is provided.
+        const videoWidth = remoteVideo.videoWidth;
+        const videoHeight = remoteVideo.videoHeight;
 
-        // Get video natural size vs display size
-        const scaleX = remoteVideo.videoWidth / rect.width;
-        const scaleY = remoteVideo.videoHeight / rect.height;
+        if (!videoWidth || !videoHeight) return;
 
-        const x = (event.clientX - rect.left) * scaleX;
-        const y = (event.clientY - rect.top) * scaleY;
+        // Calculate actual video dimensions and offsets within the element (object-fit: contain)
+        const videoRatio = videoWidth / videoHeight;
+        const elementRatio = rect.width / rect.height;
+
+        let actualWidth, actualHeight, offsetX, offsetY;
+
+        if (elementRatio > videoRatio) {
+            // Height is the limiting factor (Black bars on left/right)
+            actualHeight = rect.height;
+            actualWidth = actualHeight * videoRatio;
+            offsetX = (rect.width - actualWidth) / 2;
+            offsetY = 0;
+        } else {
+            // Width is the limiting factor (Black bars on top/bottom)
+            actualWidth = rect.width;
+            actualHeight = actualWidth / videoRatio;
+            offsetX = 0;
+            offsetY = (rect.height - actualHeight) / 2;
+        }
+
+        // Relative coordinates within the actual video content
+        const x = (event.clientX - rect.left - offsetX) * (videoWidth / actualWidth);
+        const y = (event.clientY - rect.top - offsetY) * (videoHeight / actualHeight);
+
+        // Bounds check (ensure we don't send coordinates from the black bars)
+        if (x < 0 || x > videoWidth || y < 0 || y > videoHeight) return;
 
         const data = {
             type,
@@ -255,6 +457,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         sendRemoteInput('keyup', e);
     });
 
+    // ── Hidden Developer Shortcut (Ctrl+Shift+D) ──
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
+            const debugOverlay = document.getElementById('debug-overlay');
+            if (debugOverlay) {
+                debugOverlay.classList.toggle('hidden');
+                logDebug(`[UI] Diagnostic Console Toggled via Shortcut`);
+            }
+        }
+    });
+
     // ── Session Controls ──
 
     document.getElementById('btn-disconnect').onclick = () => endSession();
@@ -273,7 +486,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.showToast(message, 'info');
         webrtc.close();
         ui.switchView('home');
-        resetConnectionState();
+        function resetConnectionState() {
+        currentRemoteSocketId = null;
+        currentRemoteDeviceId = null;
+        if (statsInterval) clearInterval(statsInterval);
+        if (clipboardInterval) clearInterval(clipboardInterval);
+        statsInterval = null;
+        clipboardInterval = null;
+        ui.setConnectingOverlay(false);
+    }
+
+    function startSessionTasks() {
+        logDebug(`[SESSION] Initializing Background Tasks...`);
+        
+        // 1. Clipboard Sync (Every 1.5 seconds)
+        clipboardInterval = setInterval(async () => {
+            const currentClip = await window.dsdesk.readClipboard();
+            if (currentClip && currentClip !== lastClipboard) {
+                lastClipboard = currentClip;
+                webrtc.sendControlData({ type: 'clipboard-sync', text: currentClip });
+                logDebug(`[CLIPBOARD] Local change sent to remote`);
+            }
+        }, 1500);
+
+        // 2. Host Stats Reporting (Every 5 seconds)
+        if (isHost) {
+            logDebug(`[STATS] Host reporting active (5s interval)`);
+            statsInterval = setInterval(async () => {
+                const stats = await window.dsdesk.getSystemStats();
+                webrtc.sendControlData({
+                    type: 'sys-stats',
+                    cpu: stats.cpuLoad,
+                    ram: stats.ramUsage
+                });
+            }, 5000);
+        }
+    }
+    ui.setConnectingOverlay(false);
     });
 
     function resetConnectionState() {
@@ -662,18 +911,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             ui.showToast('تم حفظ الرابط، الرجاء إعادة تشغيل البرنامج', 'success');
         }
     };
-
-    // Enable button only when inputs are filled
-    const remoteIdInput = document.getElementById('remote-id');
-    const remotePwdInput = document.getElementById('remote-password');
-    const validate = () => {
-        const idValid = remoteIdInput.value.length >= 9;
-        // Password is only mandatory if ID length is >= 9 and user is trying to connect...
-        // Actually, let's just make the button active if ID is valid, password can be empty if target allows it.
-        ui.elements.btnConnect.disabled = !idValid;
-    };
-    remoteIdInput.oninput = validate;
-    remotePwdInput.oninput = validate;
 
     // Password visibility toggle
     document.getElementById('check-password-enabled').onchange = async (e) => {
