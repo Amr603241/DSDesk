@@ -7,8 +7,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ui = new UIManager();
     
     // Load server settings
-    let savedServerUrl = localStorage.getItem('serverUrl') || 'http://localhost:3456';
+    const DEFAULT_SERVER = 'https://dsdesk.onrender.com';
+    let savedServerUrl = localStorage.getItem('serverUrl') || DEFAULT_SERVER;
     document.getElementById('server-url').value = savedServerUrl;
+    document.getElementById('server-url').placeholder = DEFAULT_SERVER;
     
     const signaling = new SignalingClient(savedServerUrl);
     const webrtc = new WebRTCManager();
