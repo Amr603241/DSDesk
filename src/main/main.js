@@ -11,11 +11,26 @@ let mainWindow;
 let inputHandler;
 
 // ── Device ID (9-digit unique identifier like AnyDesk) ──
-function getDeviceId() {
+// ── Device ID (9-digit unique identifier based on hardware) ──
+async function getDeviceId() {
   let id = store.get('deviceId');
   if (!id) {
-    id = Math.floor(100000000 + Math.random() * 900000000).toString();
-    store.set('deviceId', id);
+    try {
+      const data = await si.uuid();
+      const sys = await si.system();
+      // Prioritize hardware serial or OS UUID for a "Real ID"
+      const hardwareBase = sys.serial || data.os || data.hardware || data.macs.join('') || Math.random().toString();
+      
+      const hash = crypto.createHash('sha256').update(hardwareBase).digest('hex');
+      const numericId = (parseInt(hash.substring(0, 8), 16) % 900000000) + 100000000;
+      id = numericId.toString();
+      
+      store.set('deviceId', id);
+      console.log(`[✓] Stable Hardware ID generated: ${id}`);
+    } catch (e) {
+      id = Math.floor(100000000 + Math.random() * 900000000).toString();
+      store.set('deviceId', id);
+    }
   }
   return id;
 }
@@ -80,6 +95,15 @@ ipcMain.handle('refresh-password', () => {
   return pwd;
 });
 
+ipcMain.handle('set-password-enabled', (event, enabled) => {
+  store.set('passwordEnabled', enabled);
+  return true;
+});
+
+ipcMain.handle('get-password-enabled', () => {
+  return store.get('passwordEnabled') !== false; // Default to true
+});
+
 // Screen capture sources
 ipcMain.handle('get-screen-sources', async () => {
   try {
@@ -128,21 +152,97 @@ ipcMain.handle('clipboard-write', (event, text) => {
   if (text) clipboard.writeText(text);
 });
 
-// System stats handler
+// System stats handler (Advanced Pro Dashboard)
 ipcMain.handle('get-system-stats', async () => {
   try {
-    const [load, mem] = await Promise.all([
+    const [load, mem, cpu, disk, os] = await Promise.all([
       si.currentLoad(),
-      si.mem()
+      si.mem(),
+      si.cpu(),
+      si.fsSize(),
+      si.osInfo()
     ]);
     return {
-      cpu: Math.round(load.currentLoad),
-      ram: Math.round((mem.active / mem.total) * 100)
+      cpuLoad: Math.round(load.currentLoad),
+      ramUsage: Math.round((mem.active / mem.total) * 100),
+      cpuTemp: cpu.main || 0,
+      diskUsage: Math.round((disk[0].used / disk[0].size) * 100),
+      osName: os.platform + ' ' + os.release,
+      hostname: os.hostname
     };
   } catch (e) {
     console.error('Failed to get system stats:', e);
-    return { cpu: 0, ram: 0 };
+    return { cpuLoad: 0, ramUsage: 0, hostname: 'Unknown' };
   }
+});
+
+// ── AnyDesk-Style Installation Logic ──
+
+const INSTALL_PATH = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'DSDesk');
+const EXE_NAME = 'DSDesk.exe';
+
+ipcMain.handle('get-install-status', () => {
+    const currentPath = app.getPath('exe').toLowerCase();
+    return currentPath.includes('program files\\dsdesk');
+});
+
+ipcMain.handle('perform-install', async () => {
+    try {
+        const sourceDir = path.dirname(app.getPath('exe'));
+        const targetExe = path.join(INSTALL_PATH, EXE_NAME);
+
+        // 1. Create Directory
+        if (!fs.existsSync(INSTALL_PATH)) {
+            fs.mkdirSync(INSTALL_PATH, { recursive: true });
+        }
+
+        // 2. Copy Files (EXE and resources)
+        const files = fs.readdirSync(sourceDir);
+        for (const file of files) {
+            const src = path.join(sourceDir, file);
+            const dest = path.join(INSTALL_PATH, file);
+            
+            if (fs.lstatSync(src).isDirectory()) {
+                if (fs.cpSync) {
+                    fs.cpSync(src, dest, { recursive: true });
+                }
+            } else {
+                fs.copyFileSync(src, dest);
+            }
+        }
+
+        // 3. Register AutoRun (Registry)
+        const regCmd = `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "DSDesk" /t REG_SZ /d "\\"${targetExe}\\"" /f`;
+        exec(regCmd);
+
+        // 4. Create Desktop Shortcut (PowerShell)
+        const desktopPath = path.join(process.env.USERPROFILE, 'Desktop', 'DSDesk.lnk');
+        const psCmd = `powershell "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('${desktopPath}');$s.TargetPath='${targetExe}';$s.WorkingDirectory='${INSTALL_PATH}';$s.Save()"`;
+        exec(psCmd);
+
+        return { success: true, path: targetExe };
+    } catch (err) {
+        console.error('Installation failed:', err);
+        return { success: false, error: err.message };
+    }
+});
+
+ipcMain.handle('launch-installed', (event, targetExe) => {
+    shell.openPath(targetExe);
+    app.quit();
+});
+
+// ── Remote Power Controls ──
+ipcMain.handle('sys-reboot', () => {
+  exec('shutdown /r /t 0');
+});
+
+ipcMain.handle('sys-shutdown', () => {
+  exec('shutdown /s /t 0');
+});
+
+ipcMain.handle('sys-lock', () => {
+  exec('rundll32.exe user32.dll,LockWorkStation');
 });
 
 // ── Process Manager (Task Manager) ──

@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let deviceId = '';
     let password = '';
+    let passwordEnabled = true;
+    let hostname = '';
+    let osInfo = '';
     let currentRemoteSocketId = null;
     let currentRemoteDeviceId = null;
     let isHost = false;
@@ -29,10 +32,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         deviceId = await window.dsdesk.getDeviceId();
         password = await window.dsdesk.getPassword();
+        passwordEnabled = await window.dsdesk.getPasswordEnabled();
+        
+        const stats = await window.dsdesk.getSystemStats();
+        hostname = stats.hostname;
+        osInfo = stats.osName;
+
+        document.getElementById('device-hostname').innerText = hostname;
+        document.getElementById('device-os-info').innerText = osInfo;
+        
         ui.updateDeviceInfo(deviceId, password);
+        ui.setPasswordEnabled(passwordEnabled);
+
+        // Check Installation Status (AnyDesk style)
+        const isInstalled = await window.dsdesk.getInstallStatus();
+        if (!isInstalled) {
+            document.getElementById('install-banner').classList.remove('hidden');
+        }
 
         await signaling.connect();
-        signaling.register(deviceId, password);
+        signaling.register(deviceId, password, passwordEnabled);
         ui.setConnectionStatus(true, 'متصل');
     } catch (err) {
         console.error('Initialization failed:', err);
@@ -590,6 +609,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ── Form Handling ──
 
+    // ── Form Handling (Professional Flow) ──
     ui.elements.connectForm.onsubmit = (e) => {
         e.preventDefault();
         const targetId = document.getElementById('remote-id').value.replace(/\s/g, '');
@@ -604,8 +624,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('btn-connect-content').classList.add('hidden');
         document.getElementById('btn-connect-loader').classList.remove('hidden');
 
+        // Request connection (password can be empty here; server will tell us if it's needed)
         signaling.requestConnection(targetId, targetPwd);
     };
+
+    // ── Smart Feedback Handling ──
+    signaling.on('connection-error', (data) => {
+        ui.elements.btnConnect.disabled = false;
+        document.getElementById('btn-connect-content').classList.remove('hidden');
+        document.getElementById('btn-connect-loader').classList.add('hidden');
+
+        if (data.code === 'NEED_PASSWORD') {
+            document.getElementById('group-remote-password').classList.remove('hidden');
+            ui.showToast('هذا الجهاز محمي، يرجى إدخال كلمة المرور', 'warning');
+            document.getElementById('remote-password').focus();
+        } else if (data.code === 'WRONG_PASSWORD') {
+            ui.showToast('كلمة المرور غير صحيحة', 'danger');
+            document.getElementById('remote-password').focus();
+        } else {
+            ui.showToast(data.message || 'خطأ في الاتصال', 'danger');
+        }
+    });
 
     // Server settings handling
     document.getElementById('btn-save-server').onclick = () => {
@@ -620,12 +659,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const remoteIdInput = document.getElementById('remote-id');
     const remotePwdInput = document.getElementById('remote-password');
     const validate = () => {
-        ui.elements.btnConnect.disabled = !(remoteIdInput.value.length >= 9 && remotePwdInput.value.length > 0);
+        const idValid = remoteIdInput.value.length >= 9;
+        // Password is only mandatory if ID length is >= 9 and user is trying to connect...
+        // Actually, let's just make the button active if ID is valid, password can be empty if target allows it.
+        ui.elements.btnConnect.disabled = !idValid;
     };
     remoteIdInput.oninput = validate;
     remotePwdInput.oninput = validate;
 
     // Password visibility toggle
+    document.getElementById('check-password-enabled').onchange = async (e) => {
+        passwordEnabled = e.target.checked;
+        await window.dsdesk.setPasswordEnabled(passwordEnabled);
+        ui.setPasswordEnabled(passwordEnabled);
+        signaling.updatePassword(password, passwordEnabled);
+        validate();
+    };
+
     document.getElementById('btn-toggle-pwd').onclick = () => {
         const pwdSpan = document.getElementById('device-password');
         const eyeIcon = document.querySelector('.icon-eye');
@@ -646,7 +696,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-refresh-pwd').onclick = async () => {
         password = await window.dsdesk.refreshPassword();
         ui.updateDeviceInfo(null, password);
-        signaling.updatePassword(password);
+        signaling.updatePassword(password, passwordEnabled);
         ui.showToast('تم تحديث كلمة المرور', 'success');
     };
 
@@ -654,5 +704,94 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-copy-id').onclick = () => {
         navigator.clipboard.writeText(deviceId);
         ui.showToast('تم نسخ المعرّف', 'success');
+    };
+
+    // ── Professional Dashboard & Power Controls ──
+    const proDashboard = document.getElementById('pro-dashboard');
+    const powerModal = document.getElementById('power-modal');
+    let dashInterval = null;
+
+    document.getElementById('btn-quality').onclick = () => {
+        proDashboard.classList.toggle('hidden');
+        if (!proDashboard.classList.contains('hidden')) {
+            startDashboardUpdates();
+        } else {
+            stopDashboardUpdates();
+        }
+    };
+
+    document.getElementById('btn-close-dashboard').onclick = () => {
+        proDashboard.classList.add('hidden');
+        stopDashboardUpdates();
+    };
+
+    function startDashboardUpdates() {
+        if (dashInterval) return;
+        dashInterval = setInterval(async () => {
+            const stats = await window.dsdesk.getSystemStats();
+            document.getElementById('dash-os').innerText = stats.osName || 'Windows';
+            document.getElementById('dash-cpu-text').innerText = `${stats.cpuLoad}%`;
+            document.getElementById('dash-cpu-bar').style.width = `${stats.cpuLoad}%`;
+            document.getElementById('dash-ram-text').innerText = `${stats.ramUsage}%`;
+            document.getElementById('dash-ram-bar').style.width = `${stats.ramUsage}%`;
+            document.getElementById('dash-disk-text').innerText = `${stats.diskUsage}%`;
+            document.getElementById('dash-disk-bar').style.width = `${stats.diskUsage}%`;
+        }, 2000);
+    }
+
+    function stopDashboardUpdates() {
+        if (dashInterval) {
+            clearInterval(dashInterval);
+            dashInterval = null;
+        }
+    }
+
+    document.getElementById('btn-power-menu').onclick = () => {
+        powerModal.classList.remove('hidden');
+    };
+
+    document.getElementById('action-lock').onclick = () => {
+       window.dsdesk.lock();
+       ui.showToast('تم إرسال أمر القفل', 'success');
+       powerModal.classList.add('hidden');
+    };
+
+    document.getElementById('action-reboot').onclick = () => {
+       if (confirm('هل أنت متأكد من إعادة تشغيل الجهاز البعيد؟')) {
+           window.dsdesk.reboot();
+           powerModal.classList.add('hidden');
+       }
+    };
+
+    document.getElementById('action-shutdown').onclick = () => {
+       if (confirm('هل أنت متأكد من إيقاف تشغيل الجهاز البعيد؟')) {
+           window.dsdesk.shutdown();
+           powerModal.classList.add('hidden');
+       }
+    };
+
+    // ── Installation Banner Actions ──
+    document.getElementById('btn-close-banner').onclick = () => {
+        document.getElementById('install-banner').classList.add('hidden');
+    };
+
+    document.getElementById('btn-install-now').onclick = async () => {
+        const btn = document.getElementById('btn-install-now');
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = 'جاري التثبيت...';
+
+        const result = await window.dsdesk.performInstall();
+        
+        if (result.success) {
+            ui.showToast('تم التثبيت بنجاح! سيتم إعادة تشغيل البرنامج من الموقع الجديد.', 'success');
+            setTimeout(() => {
+                window.dsdesk.launchInstalled(result.path);
+            }, 3000);
+        } else {
+            btn.disabled = false;
+            btn.innerText = originalText;
+            ui.showToast('فشل التثبيت: ' + result.error, 'danger');
+        }
     };
 });

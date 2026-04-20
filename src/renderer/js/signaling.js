@@ -52,15 +52,15 @@ class SignalingClient {
   }
 
   // ── Registration ──
-  register(deviceId, password) {
+  register(deviceId, password, passwordEnabled) {
     this.deviceId = deviceId;
     this.password = password;
-    this.socket.emit('register', { deviceId, password });
+    this.socket.emit('register', { deviceId, password, passwordEnabled });
   }
 
-  updatePassword(password) {
+  updatePassword(password, passwordEnabled) {
     this.password = password;
-    this.socket.emit('update-password', { password });
+    this.socket.emit('update-password', { password, passwordEnabled });
   }
 
   // ── Connection ──

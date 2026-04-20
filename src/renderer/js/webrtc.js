@@ -11,15 +11,22 @@ class WebRTCManager {
     this.remoteStream = null;
     this.handlers = {};
 
-    // Standard STUN servers for NAT traversal
+    // Enhanced STUN servers and WebRTC optimizations
     this.config = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun3.l.google.com:19302' },
-        { urls: 'stun:stun4.l.google.com:19302' }
-      ]
+        { urls: 'stun:stun.anydesk.com:3478' },
+        { urls: 'stun:stun.ekiga.net' },
+        { urls: 'stun:stun.ideasip.com' },
+        { urls: 'stun:stun.schlund.de' },
+        { urls: 'stun:stun.voiparound.com' },
+        { urls: 'stun:stun.voipbuster.com' },
+        { urls: 'stun:stun.voipstunt.com' }
+      ],
+      iceCandidatePoolSize: 10,
+      bundlePolicy: 'max-bundle'
     };
   }
 

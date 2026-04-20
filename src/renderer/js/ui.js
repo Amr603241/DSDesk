@@ -17,13 +17,13 @@ class UIManager {
       statusBadge: document.getElementById('status-badge'),
       idDisplay: document.getElementById('id-display'),
       passwordDisplay: document.querySelector('.password-display'),
-      remoteVideo: document.getElementById('remote-video'),
-      toastContainer: document.getElementById('toast-container'),
-      connectingOverlay: document.getElementById('connecting-overlay'),
-      connectingStatus: document.getElementById('connecting-status'),
+      passwordEnabled: document.getElementById('check-password-enabled'),
       chatPanel: document.getElementById('chat-panel'),
       chatMessages: document.getElementById('chat-messages'),
       chatBadge: document.getElementById('chat-badge'),
+      toastContainer: document.getElementById('toast-container'),
+      connectingOverlay: document.getElementById('connecting-overlay'),
+      connectingStatus: document.getElementById('connecting-status'),
       modalRequest: document.getElementById('modal-request'),
       requestFromId: document.getElementById('request-from-id'),
       btnConnect: document.getElementById('btn-connect'),
@@ -43,6 +43,15 @@ class UIManager {
     Object.keys(this.views).forEach(v => {
       this.views[v].classList.toggle('active', v === viewName);
     });
+  }
+
+  setPasswordEnabled(enabled) {
+    if (this.elements.passwordEnabled) {
+      this.elements.passwordEnabled.checked = enabled;
+      this.elements.passwordDisplay.style.opacity = enabled ? '1' : '0.5';
+      this.elements.passwordDisplay.style.pointerEvents = enabled ? 'auto' : 'none';
+      this.elements.passwordDisplay.title = enabled ? '' : 'تم تعطيل كلمة المرور';
+    }
   }
 
   updateDeviceInfo(id, password) {

@@ -27,20 +27,23 @@ io.on('connection', (socket) => {
   console.log(`[+] Client connected: ${socket.id}`);
 
   // ── Register device ──
-  socket.on('register', ({ deviceId, password }) => {
+  socket.on('register', ({ deviceId, password, passwordEnabled }) => {
     devices.set(deviceId, {
       socketId: socket.id,
-      password: password
+      password: password,
+      passwordEnabled: passwordEnabled !== false // Default to true
     });
     socket.deviceId = deviceId;
-    console.log(`[✓] Device registered: ${deviceId}`);
+    console.log(`[✓] Device registered: ${deviceId} (Pwd: ${passwordEnabled !== false ? 'Yes' : 'No'})`);
     socket.emit('registered', { deviceId, success: true });
   });
 
-  // ── Update password ──
-  socket.on('update-password', ({ password }) => {
+  // ── Update password settings ──
+  socket.on('update-password', ({ password, passwordEnabled }) => {
     if (socket.deviceId && devices.has(socket.deviceId)) {
-      devices.get(socket.deviceId).password = password;
+      const device = devices.get(socket.deviceId);
+      if (password !== undefined) device.password = password;
+      if (passwordEnabled !== undefined) device.passwordEnabled = passwordEnabled;
       console.log(`[~] Password updated for: ${socket.deviceId}`);
     }
   });
@@ -57,7 +60,15 @@ io.on('connection', (socket) => {
       return;
     }
 
-    if (target.password !== password) {
+    if (target.passwordEnabled && !password) {
+      socket.emit('connection-error', {
+        message: 'هذا الجهاز محمي بكلمة مرور',
+        code: 'NEED_PASSWORD'
+      });
+      return;
+    }
+
+    if (target.passwordEnabled && target.password !== password) {
       socket.emit('connection-error', {
         message: 'كلمة المرور غير صحيحة',
         code: 'WRONG_PASSWORD'

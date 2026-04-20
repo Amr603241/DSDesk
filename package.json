@@ -35,12 +35,29 @@
       "output": "dist"
     },
     "win": {
-      "target": "dir"
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "portable": {
+      "artifactName": "DSDesk_Portable.exe",
+      "unicode": true
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": "always",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "artifactName": "DSDesk_Setup.exe",
+      "uninstallDisplayName": "DSDesk Professional"
     },
     "forceCodeSigning": false,
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "extraResources": [
+      "server/**"
+    ]
   }
 }

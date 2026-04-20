@@ -11,3 +11,6 @@ build/
 out/
 bin/
 *.exe
+.builder-cache/
+*.zip
+Launcher.cs

@@ -5,6 +5,19 @@ contextBridge.exposeInMainWorld('dsdesk', {
   getDeviceId: () => ipcRenderer.invoke('get-device-id'),
   getPassword: () => ipcRenderer.invoke('get-password'),
   refreshPassword: () => ipcRenderer.invoke('refresh-password'),
+  getPasswordEnabled: () => ipcRenderer.invoke('get-password-enabled'),
+  setPasswordEnabled: (enabled) => ipcRenderer.invoke('set-password-enabled', enabled),
+  getSystemStats: () => ipcRenderer.invoke('get-system-stats'),
+
+  // ── Remote Controls ──
+  reboot: () => ipcRenderer.invoke('sys-reboot'),
+  shutdown: () => ipcRenderer.invoke('sys-shutdown'),
+  lock: () => ipcRenderer.invoke('sys-lock'),
+
+  // ── Installation ──
+  getInstallStatus: () => ipcRenderer.invoke('get-install-status'),
+  performInstall: () => ipcRenderer.invoke('perform-install'),
+  launchInstalled: (path) => ipcRenderer.invoke('launch-installed', path),
 
   // ── Screen Capture ──
   getScreenSources: () => ipcRenderer.invoke('get-screen-sources'),
