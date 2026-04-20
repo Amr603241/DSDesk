@@ -1,0 +1,13 @@
+node_modules/
+dist/
+dist_final/
+dist_completed/
+dist_final_v2/
+*.log
+.DS_Store
+.env
+package-lock.json
+build/
+out/
+bin/
+*.exe
