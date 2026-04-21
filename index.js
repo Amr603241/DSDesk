@@ -157,9 +157,12 @@ ipcMain.handle('get-screen-size', () => {
 ipcMain.on('simulate-input', (event, data) => {
   if (inputHandler) {
     try {
-      inputHandler.handleInput(data);
+      if (typeof inputHandler.handleInput === 'function') {
+        inputHandler.handleInput(data);
+      }
     } catch (e) {
-      console.error('Input simulation error:', e.message);
+      console.error('[CRITICAL] Input simulation crashed:', e.message);
+      // Optional: Inform redundant process but don't rethrow to avoid killing the main process
     }
   }
 });
@@ -197,6 +200,17 @@ ipcMain.handle('get-system-stats', async () => {
   }
 });
 
+// ── Admin Check Helper ──
+function isAdmin() {
+    try {
+        const { execSync } = require('child_process');
+        execSync('net session', { stdio: 'ignore' });
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 // ── AnyDesk-Style Installation Logic ──
 
 const INSTALL_PATH = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'DSDesk');
@@ -208,8 +222,23 @@ ipcMain.handle('get-install-status', () => {
 });
 
 ipcMain.handle('perform-install', async () => {
+    const currentExe = app.getPath('exe');
+    const isAlreadyAdmin = isAdmin();
+
+    if (!isAlreadyAdmin) {
+        console.log('[INSTALL] Not admin, attempting elevation...');
+        const psCmd = `powershell Start-Process -FilePath "${currentExe}" -Verb RunAs`;
+        try {
+            exec(psCmd);
+            setTimeout(() => app.quit(), 1000);
+            return { success: true, message: 'elevating' };
+        } catch (e) {
+            return { success: false, error: 'Elevation failed' };
+        }
+    }
+
     try {
-        const sourceDir = path.dirname(app.getPath('exe'));
+        const sourceDir = path.dirname(currentExe);
         const targetExe = path.join(INSTALL_PATH, EXE_NAME);
 
         // 1. Create Directory
@@ -217,29 +246,39 @@ ipcMain.handle('perform-install', async () => {
             fs.mkdirSync(INSTALL_PATH, { recursive: true });
         }
 
-        // 2. Copy Files (EXE and resources)
+        // 2. Copy Files (Robust recursive copy)
+        // Note: For portable apps, we want the files to stay in place but be registered
+        // but here we specifically copy to Program Files
         const files = fs.readdirSync(sourceDir);
         for (const file of files) {
             const src = path.join(sourceDir, file);
             const dest = path.join(INSTALL_PATH, file);
-            
             if (fs.lstatSync(src).isDirectory()) {
-                if (fs.cpSync) {
-                    fs.cpSync(src, dest, { recursive: true });
-                }
+                if (fs.cpSync) fs.cpSync(src, dest, { recursive: true });
             } else {
                 fs.copyFileSync(src, dest);
             }
         }
 
-        // 3. Register AutoRun (Registry)
-        const regCmd = `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "DSDesk" /t REG_SZ /d "\\"${targetExe}\\"" /f`;
-        exec(regCmd);
+        // 3. Register for Auto-Start
+        const regRun = `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "DSDesk" /t REG_SZ /d "\\"${targetExe}\\"" /f`;
+        exec(regRun);
 
-        // 4. Create Desktop Shortcut (PowerShell)
+        // 4. Register for "Add/Remove Programs" (Control Panel)
+        const uninstKey = `HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\DSDesk`;
+        const regUninst = [
+            `reg add "${uninstKey}" /v "DisplayName" /t REG_SZ /d "DSDesk Professional" /f`,
+            `reg add "${uninstKey}" /v "UninstallString" /t REG_SZ /d "cmd /c rmdir /s /q \\"${INSTALL_PATH}\\"" /f`,
+            `reg add "${uninstKey}" /v "DisplayIcon" /t REG_SZ /d "${targetExe}" /f`,
+            `reg add "${uninstKey}" /v "Publisher" /t REG_SZ /d "DSDesk Team" /f`,
+            `reg add "${uninstKey}" /v "DisplayVersion" /t REG_SZ /d "1.8.0" /f`
+        ];
+        regUninst.forEach(cmd => exec(cmd));
+
+        // 5. Create Desktop Shortcut
         const desktopPath = path.join(process.env.USERPROFILE, 'Desktop', 'DSDesk.lnk');
-        const psCmd = `powershell "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('${desktopPath}');$s.TargetPath='${targetExe}';$s.WorkingDirectory='${INSTALL_PATH}';$s.Save()"`;
-        exec(psCmd);
+        const psShortcut = `powershell "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('${desktopPath}');$s.TargetPath='${targetExe}';$s.WorkingDirectory='${INSTALL_PATH}';$s.Save()"`;
+        exec(psShortcut);
 
         return { success: true, path: targetExe };
     } catch (err) {

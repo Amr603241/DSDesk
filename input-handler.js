@@ -14,7 +14,15 @@ try {
   mouse_event_fn = user32.func('void __stdcall mouse_event(unsigned int dwFlags, unsigned int dx, unsigned int dy, unsigned int dwData, uintptr_t dwExtraInfo)');
   keybd_event_fn = user32.func('void __stdcall keybd_event(unsigned char bVk, unsigned char bScan, unsigned int dwFlags, uintptr_t dwExtraInfo)');
 
-  console.log('[✓] Windows API (user32.dll) loaded via koffi');
+  // Enforce DPI awareness to ensure SetCursorPos works with physical pixels
+  try {
+    const SetProcessDPIAware = user32.func('int __stdcall SetProcessDPIAware()');
+    SetProcessDPIAware();
+  } catch (e) {
+    console.warn('SetProcessDPIAware not supported or already set');
+  }
+
+  console.log('[✓] Windows API (user32.dll) loaded with High DPI awareness');
 } catch (e) {
   console.error('[✗] Failed to load koffi/user32.dll:', e.message);
   console.error('    Input simulation will be disabled.');
@@ -71,15 +79,21 @@ const VK_MAP = {
  * @param {Object} data - Input event data
  */
 function handleInput(data) {
-  if (!user32) return;
+  if (!user32 || !data) return;
+
+  // Validation: Ensure coordinates are valid numbers to prevent native crashes
+  const x = Number.isFinite(data.x) ? Math.round(data.x) : null;
+  const y = Number.isFinite(data.y) ? Math.round(data.y) : null;
 
   switch (data.type) {
     case 'mousemove':
-      SetCursorPos(Math.round(data.x), Math.round(data.y));
+      if (x !== null && y !== null) {
+        SetCursorPos(x, y);
+      }
       break;
 
     case 'mousedown':
-      SetCursorPos(Math.round(data.x), Math.round(data.y));
+      if (x !== null && y !== null) SetCursorPos(x, y);
       if (data.button === 0) mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
       else if (data.button === 2) mouse_event_fn(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
       else if (data.button === 1) mouse_event_fn(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 0);
@@ -92,7 +106,7 @@ function handleInput(data) {
       break;
 
     case 'dblclick':
-      SetCursorPos(Math.round(data.x), Math.round(data.y));
+      if (x !== null && y !== null) SetCursorPos(x, y);
       mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
       mouse_event_fn(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
       mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);

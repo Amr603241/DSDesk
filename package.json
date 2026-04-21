@@ -9,7 +9,7 @@
                     "dev": "concurrently \"npm run server\" \"electron . --multi-instance\" \"electron . --multi-instance\"",
                     "rebuild":  "electron-rebuild",
                     "build":  "electron-builder",
-                    "package":  "electron-packager . DSDesk --platform=win32 --arch=x64 --out=dist_completed --overwrite"
+                    "package":  "electron-packager . DSDesk --platform=win32 --arch=x64 --out=dist_lean --overwrite --prune --ignore=\"(dist|dist_completed|dist_lean|\\.git)\""
                 },
     "author":  "DSDesk",
     "license":  "MIT",
@@ -31,31 +31,17 @@
     "build":  {
                   "appId":  "com.dsdesk.app",
                   "productName":  "DSDesk",
-                  "directories":  {
-                                      "output":  "dist"
-                                  },
                   "win":  {
-                              "target":  [
-                                             "portable",
-                                             "nsis"
-                                         ],
-                              "requestedExecutionLevel":  "requireAdministrator"
-                          },
+                               "target":  ["portable"],
+                               "signingHashAlgorithms": null,
+                               "certificateFile": null,
+                               "sign": null
+                           },
                   "portable":  {
-                                   "artifactName":  "DSDesk_Portable.exe",
+                                   "artifactName":  "DSDesk_Portable_v1.8.0.exe",
                                    "unicode":  true
                                },
-                  "nsis":  {
-                                "oneClick":  true,
-                                "perMachine":  false,
-                                "allowToChangeInstallationDirectory":  false,
-                                "createDesktopShortcut":  "always",
-                                "artifactName":  "DSDesk_Setup.exe",
-                                "uninstallDisplayName":  "DSDesk Professional"
-                           },
                   "forceCodeSigning":  false,
-                  "extraResources":  [
-                                         "server/**"
-                                     ]
+                  "extraResources":  ["server/**"]
               }
 }

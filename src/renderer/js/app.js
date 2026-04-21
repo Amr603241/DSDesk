@@ -66,6 +66,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         deviceId = await window.dsdesk.getDeviceId();
         password = await window.dsdesk.getPassword();
         passwordEnabled = await window.dsdesk.getPasswordEnabled();
+        const isInstalled = await window.dsdesk.getInstallStatus();
+
+        if (isInstalled) {
+            document.getElementById('install-banner')?.classList.add('hidden');
+            document.getElementById('badge-installed')?.classList.remove('hidden');
+        } else {
+            document.getElementById('install-banner')?.classList.remove('hidden');
+            document.getElementById('badge-installed')?.classList.add('hidden');
+        }
         
         logDebug(`[PHASE 2] Device Ready: ${deviceId}`);
         ui.updateDeviceInfo(deviceId, password);
@@ -213,6 +222,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnShowDebug) {
         btnShowDebug.onclick = () => {
             document.getElementById('debug-overlay').classList.toggle('hidden');
+        };
+    }
+
+    const btnInstallNow = document.getElementById('btn-install-now');
+    if (btnInstallNow) {
+        btnInstallNow.onclick = async () => {
+            ui.showToast('جاري بدء عملية التثبيت...', 'info');
+            const result = await window.dsdesk.performInstall();
+            if (result.success) {
+                if (result.message === 'elevating') {
+                    ui.showToast('يرجى الموافقة على طلب الصلاحيات لإكمال التثبيت', 'warn');
+                } else {
+                    ui.showToast('تم التثبيت بنجاح! جاري تشغيل النسخة المثبتة...', 'success');
+                    setTimeout(() => window.close(), 2000);
+                }
+            } else {
+                ui.showToast(`فشل التثبيت: ${result.error}`, 'error');
+            }
+        };
+    }
+
+    const btnCloseBanner = document.getElementById('btn-close-banner');
+    if (btnCloseBanner) {
+        btnCloseBanner.onclick = () => {
+            document.getElementById('install-banner').classList.add('hidden');
         };
     }
 
@@ -387,8 +421,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const remoteVideo = document.getElementById('remote-video');
 
+    let lastMoveTime = 0;
+    const MOVE_THROTTLE = 30; // 33fps: Best balance for stability
+
     function sendRemoteInput(type, event) {
         if (isHost || !currentRemoteSocketId) return;
+
+        // Throttle high-frequency events
+        if (type === 'mousemove' || type === 'wheel') {
+            const now = Date.now();
+            if (now - lastMoveTime < MOVE_THROTTLE) return;
+            lastMoveTime = now;
+        }
 
         const rect = remoteVideo.getBoundingClientRect();
         const videoWidth = remoteVideo.videoWidth;
@@ -425,8 +469,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const data = {
             type,
-            x,
-            y,
+            x: Math.round(x), // Use integers to avoid float overhead
+            y: Math.round(y),
             button: event.button,
             key: event.key,
             code: event.code,
