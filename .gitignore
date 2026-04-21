@@ -2,7 +2,7 @@ node_modules/
 dist*/
 master*/
 temp*/
-build_staging/
+build_staging*/
 out/
 bin/
 *.exe
@@ -15,6 +15,5 @@ bin/
 package-lock.json
 *.cs
 *.sed
-DSDesk_Build_v*
-DSDesk_Pro_v*
-DSDesk_Finest_*
+DSDesk_*
+!DSDesk.manifest
