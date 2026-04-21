@@ -186,6 +186,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    webrtc.on('ice-restart-offer', (offer) => {
+        if (state.currentRemoteSocketId) {
+            signaling.sendOffer(state.currentRemoteSocketId, offer);
+        }
+    });
+
     webrtc.on('remote-stream', (stream) => {
         ui.displayRemoteVideo(stream);
         ui.setConnectingOverlay(false);

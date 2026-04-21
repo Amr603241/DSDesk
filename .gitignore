@@ -14,3 +14,14 @@ bin/
 .builder-cache/
 *.zip
 Launcher.cs
+ 
+DSDesk_Professional_v1.8.zip
+dist_client_v18/
+*.exe
+*.zip
+launcher.cs
+launcher_v2.cs
+stub.exe
+stub_v2.exe
+build.sed
+build_final.sed

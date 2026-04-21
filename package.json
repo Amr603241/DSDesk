@@ -32,21 +32,20 @@
     "build": {
         "appId": "com.dsdesk.app",
         "productName": "DSDesk",
+        "asar": true,
+        "compression": "maximum",
+        "files": [
+            "src/renderer/**/*",
+            "index.js",
+            "preload.js",
+            "input-handler.js",
+            "package.json",
+            "server/**/*"
+        ],
         "win": {
-            "target": [
-                "portable"
-            ],
-            "signingHashAlgorithms": null,
-            "certificateFile": null,
-            "sign": null
-        },
-        "portable": {
-            "artifactName": "DSDesk_Portable_v1.8.0.exe",
-            "unicode": true
-        },
-        "forceCodeSigning": false,
-        "extraResources": [
-            "server/**"
-        ]
+            "target": "portable",
+            "artifactName": "DSDesk.exe",
+            "sign": "sign-dummy.js"
+        }
     }
 }

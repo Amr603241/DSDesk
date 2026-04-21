@@ -73,6 +73,9 @@ class WebRTCManager {
         logInternal(`[CONN STATE] ${this.peerConnection.connectionState}`);
         if (this.peerConnection.connectionState === 'connected') {
             logInternal(`[SUCCESS] Peer-to-Peer Tunnel OPENED`);
+        } else if (this.peerConnection.connectionState === 'failed') {
+            logInternal(`[RADICAL] Connection FAILED. Attempting automatic recovery...`);
+            this._attemptIceRestart();
         }
     };
 
@@ -96,8 +99,8 @@ class WebRTCManager {
     if (isOfferer) {
       // Use unordered mode to prevent Head-of-Line blocking (stuttering)
       this._setupDataChannel(this.peerConnection.createDataChannel('control-channel', {
-          ordered: false,
-          maxRetransmits: 0
+          ordered: true,
+          maxRetransmits: null // Unlimited retransmits for control fidelity
       }));
     } else {
       this.peerConnection.ondatachannel = (event) => {
@@ -275,6 +278,10 @@ class WebRTCManager {
     } else {
       sdp = sdp.replace(/b=AS:.*(?=\n|$)/g, `b=AS:${bitrate}`);
     }
+    
+    // Radical: Ensure transport-cc is prioritized for bandwidth estimation
+    sdp = sdp.replace('a=group:BUNDLE video', 'a=group:BUNDLE video data');
+    
     return sdp;
   }
 
@@ -301,6 +308,18 @@ class WebRTCManager {
       await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
     } catch (e) {
       console.warn('[RTC] Candidate application postponed or failed:', e.message);
+    }
+  }
+
+  async _attemptIceRestart() {
+    try {
+        if (!this.peerConnection) return;
+        console.log('[RTC] Radical: Initializing ICE Restart sequence...');
+        const offer = await this.peerConnection.createOffer({ iceRestart: true });
+        await this.peerConnection.setLocalDescription(offer);
+        this.emit('ice-restart-offer', offer);
+    } catch (e) {
+        console.error('[RTC] Radical: ICE Restart initiation failed:', e);
     }
   }
 
