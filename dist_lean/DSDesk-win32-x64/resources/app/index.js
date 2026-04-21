@@ -13,13 +13,25 @@ app.commandLine.appendSwitch('enable-features', 'WebRTCPeerConnectionWithUrnUint
 
 const store = new Store();
 
-let mainWindow;
-let inputHandler;
+let inputHandler = null;
 
 // ── Load Input Handler ──
+let inputHandler = null;
+const inputHandlerPath = path.join(__dirname, 'src/main/input-handler.js');
+const rootInputHandlerPath = path.join(__dirname, 'input-handler.js');
+
 try {
-  inputHandler = require('./src/main/input-handler');
-  console.log('[✓] Input handler bridge active');
+  if (fs.existsSync(inputHandlerPath)) {
+    inputHandler = require(inputHandlerPath);
+  } else if (fs.existsSync(rootInputHandlerPath)) {
+    inputHandler = require(rootInputHandlerPath);
+  }
+  
+  if (inputHandler) {
+    console.log('[✓] Input handler bridge active');
+  } else {
+    console.error('[✗] Input handler not found');
+  }
 } catch (e) {
   console.error('[✗] Input handler failed to load:', e.message);
 }
@@ -95,12 +107,9 @@ function createWindow() {
     mainWindow.show();
   });
 
-  // Initialize input handler (Windows API via koffi)
-  try {
-    inputHandler = require('./input-handler');
-    console.log('[✓] Input handler loaded successfully');
-  } catch (e) {
-    console.error('[✗] Input handler failed to load:', e.message);
+  // Input handler is already loaded at startup
+  if (!inputHandler) {
+    console.warn('[!] Input handler was not available during createWindow');
   }
 }
 
@@ -136,14 +145,12 @@ ipcMain.on('simulate-input', (event, data) => {
 // Device info
 ipcMain.handle('get-device-id', () => getDeviceId());
 
-ipcMain.handle('is-admin', () => {
-    try {
-        // 'net session' only succeeds if running as Administrator
-        require('child_process').execSync('net session', { stdio: 'ignore' });
-        return true;
-    } catch (e) {
-        return false;
-    }
+ipcMain.handle('is-admin', async () => {
+    return new Promise((resolve) => {
+        exec('net session', { stdio: 'ignore' }, (err) => {
+            resolve(!err);
+        });
+    });
 });
 
 ipcMain.handle('get-password', () => {
@@ -252,15 +259,13 @@ ipcMain.handle('get-system-stats', async () => {
   }
 });
 
-// ── Admin Check Helper ──
-function isAdmin() {
-    try {
-        const { execSync } = require('child_process');
-        execSync('net session', { stdio: 'ignore' });
-        return true;
-    } catch (e) {
-        return false;
-    }
+// ── Admin Check Helper (Async) ──
+async function isAdmin() {
+    return new Promise((resolve) => {
+        exec('net session', { stdio: 'ignore' }, (err) => {
+            resolve(!err);
+        });
+    });
 }
 
 // ── AnyDesk-Style Installation Logic ──

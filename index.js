@@ -13,10 +13,10 @@ app.commandLine.appendSwitch('enable-features', 'WebRTCPeerConnectionWithUrnUint
 
 const store = new Store();
 
+let mainWindow;
 let inputHandler = null;
 
 // ── Load Input Handler ──
-let inputHandler = null;
 const inputHandlerPath = path.join(__dirname, 'src/main/input-handler.js');
 const rootInputHandlerPath = path.join(__dirname, 'input-handler.js');
 

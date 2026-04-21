@@ -42,7 +42,18 @@ class UIManager {
 
   switchView(viewName) {
     Object.keys(this.views).forEach(v => {
-      this.views[v].classList.toggle('active', v === viewName);
+      const view = this.views[v];
+      if (v === viewName) {
+          view.classList.add('active');
+          view.style.opacity = '0';
+          setTimeout(() => {
+              view.style.transition = 'opacity 0.4s ease-in-out';
+              view.style.opacity = '1';
+          }, 10);
+      } else {
+          view.classList.remove('active');
+          view.style.opacity = '0';
+      }
     });
   }
 
