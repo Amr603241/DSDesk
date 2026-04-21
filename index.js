@@ -13,13 +13,25 @@ app.commandLine.appendSwitch('enable-features', 'WebRTCPeerConnectionWithUrnUint
 
 const store = new Store();
 
-let mainWindow;
-let inputHandler;
+let inputHandler = null;
 
 // ── Load Input Handler ──
+let inputHandler = null;
+const inputHandlerPath = path.join(__dirname, 'src/main/input-handler.js');
+const rootInputHandlerPath = path.join(__dirname, 'input-handler.js');
+
 try {
-  inputHandler = require('./src/main/input-handler');
-  console.log('[✓] Input handler bridge active');
+  if (fs.existsSync(inputHandlerPath)) {
+    inputHandler = require(inputHandlerPath);
+  } else if (fs.existsSync(rootInputHandlerPath)) {
+    inputHandler = require(rootInputHandlerPath);
+  }
+  
+  if (inputHandler) {
+    console.log('[✓] Input handler bridge active');
+  } else {
+    console.error('[✗] Input handler not found');
+  }
 } catch (e) {
   console.error('[✗] Input handler failed to load:', e.message);
 }
@@ -95,12 +107,9 @@ function createWindow() {
     mainWindow.show();
   });
 
-  // Initialize input handler (Windows API via koffi)
-  try {
-    inputHandler = require('./input-handler');
-    console.log('[✓] Input handler loaded successfully');
-  } catch (e) {
-    console.error('[✗] Input handler failed to load:', e.message);
+  // Input handler is already loaded at startup
+  if (!inputHandler) {
+    console.warn('[!] Input handler was not available during createWindow');
   }
 }
 
@@ -123,7 +132,11 @@ ipcMain.handle('sys-lock', () => {
 // ── Input Simulation Bridge ──
 ipcMain.on('simulate-input', (event, data) => {
     if (inputHandler) {
-        inputHandler.handleInput(data);
+        try {
+            inputHandler.handleInput(data);
+        } catch (e) {
+            console.error('[CRITICAL] Input simulation crashed:', e.message);
+        }
     }
 });
 
@@ -132,14 +145,12 @@ ipcMain.on('simulate-input', (event, data) => {
 // Device info
 ipcMain.handle('get-device-id', () => getDeviceId());
 
-ipcMain.handle('is-admin', () => {
-    try {
-        // 'net session' only succeeds if running as Administrator
-        require('child_process').execSync('net session', { stdio: 'ignore' });
-        return true;
-    } catch (e) {
-        return false;
-    }
+ipcMain.handle('is-admin', async () => {
+    return new Promise((resolve) => {
+        exec('net session', { stdio: 'ignore' }, (err) => {
+            resolve(!err);
+        });
+    });
 });
 
 ipcMain.handle('get-password', () => {
@@ -215,20 +226,6 @@ ipcMain.handle('get-system-info', () => {
     };
 });
 
-// Input simulation
-ipcMain.on('simulate-input', (event, data) => {
-  if (inputHandler) {
-    try {
-      if (typeof inputHandler.handleInput === 'function') {
-        inputHandler.handleInput(data);
-      }
-    } catch (e) {
-      console.error('[CRITICAL] Input simulation crashed:', e.message);
-      // Optional: Inform redundant process but don't rethrow to avoid killing the main process
-    }
-  }
-});
-
 // Clipboard handlers
 ipcMain.handle('clipboard-read', () => {
   return clipboard.readText();
@@ -262,15 +259,13 @@ ipcMain.handle('get-system-stats', async () => {
   }
 });
 
-// ── Admin Check Helper ──
-function isAdmin() {
-    try {
-        const { execSync } = require('child_process');
-        execSync('net session', { stdio: 'ignore' });
-        return true;
-    } catch (e) {
-        return false;
-    }
+// ── Admin Check Helper (Async) ──
+async function isAdmin() {
+    return new Promise((resolve) => {
+        exec('net session', { stdio: 'ignore' }, (err) => {
+            resolve(!err);
+        });
+    });
 }
 
 // ── AnyDesk-Style Installation Logic ──
@@ -352,19 +347,6 @@ ipcMain.handle('perform-install', async () => {
 ipcMain.handle('launch-installed', (event, targetExe) => {
     shell.openPath(targetExe);
     app.quit();
-});
-
-// ── Remote Power Controls ──
-ipcMain.handle('sys-reboot', () => {
-  exec('shutdown /r /t 0');
-});
-
-ipcMain.handle('sys-shutdown', () => {
-  exec('shutdown /s /t 0');
-});
-
-ipcMain.handle('sys-lock', () => {
-  exec('rundll32.exe user32.dll,LockWorkStation');
 });
 
 // ── Process Manager (Task Manager) ──

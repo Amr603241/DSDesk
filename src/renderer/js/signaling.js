@@ -15,11 +15,12 @@ class SignalingClient {
   async ping() {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      await fetch(this.serverUrl, { mode: 'no-cors', signal: controller.signal });
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s for Render cold start
+      const response = await fetch(this.serverUrl, { mode: 'no-cors', signal: controller.signal });
       clearTimeout(timeoutId);
       return true;
     } catch (e) {
+      console.warn('[!] Server Ping failed (might be waking up):', e.message);
       return false;
     }
   }
@@ -27,19 +28,33 @@ class SignalingClient {
   connect() {
     return new Promise((resolve, reject) => {
       this.socket = io(this.serverUrl, {
-        reconnectionAttempts: 10,
-        timeout: 45000,
+        reconnection: true,
+        reconnectionAttempts: Infinity, // Keep trying
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
         transports: ['websocket', 'polling']
       });
 
       this.socket.on('connect', () => {
         console.log('[✓] Connected to signaling server');
+        // Auto-re-register if we have credentials
+        if (this.deviceId) {
+            console.log('[!] Re-registering following reconnection...');
+            this.register(this.deviceId, this.password, this.passwordEnabled !== false);
+        }
         resolve();
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('[✗] Signaling connection error:', error);
-        reject(error);
+        console.error('[✗] Signaling connection error:', error.message);
+        // Only reject on first attempt if desired, but here we let it keep trying
+        // reject(error); 
+      });
+
+      this.socket.on('disconnect', (reason) => {
+          console.warn('[!] Disconnected from server:', reason);
+          if (window.logDebugToApp) window.logDebugToApp(`[SIGNAL] Disconnected: ${reason}`, 'warn');
       });
 
       // Register built-in event listeners

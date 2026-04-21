@@ -123,7 +123,11 @@ ipcMain.handle('sys-lock', () => {
 // ── Input Simulation Bridge ──
 ipcMain.on('simulate-input', (event, data) => {
     if (inputHandler) {
-        inputHandler.handleInput(data);
+        try {
+            inputHandler.handleInput(data);
+        } catch (e) {
+            console.error('[CRITICAL] Input simulation crashed:', e.message);
+        }
     }
 });
 
@@ -213,20 +217,6 @@ ipcMain.handle('get-system-info', () => {
         usedMemoryPercent: Math.round(((totalMem - freeMem) / totalMem) * 100),
         uptime: Math.round(os.uptime() / 3600) // Hours
     };
-});
-
-// Input simulation
-ipcMain.on('simulate-input', (event, data) => {
-  if (inputHandler) {
-    try {
-      if (typeof inputHandler.handleInput === 'function') {
-        inputHandler.handleInput(data);
-      }
-    } catch (e) {
-      console.error('[CRITICAL] Input simulation crashed:', e.message);
-      // Optional: Inform redundant process but don't rethrow to avoid killing the main process
-    }
-  }
 });
 
 // Clipboard handlers
@@ -352,19 +342,6 @@ ipcMain.handle('perform-install', async () => {
 ipcMain.handle('launch-installed', (event, targetExe) => {
     shell.openPath(targetExe);
     app.quit();
-});
-
-// ── Remote Power Controls ──
-ipcMain.handle('sys-reboot', () => {
-  exec('shutdown /r /t 0');
-});
-
-ipcMain.handle('sys-shutdown', () => {
-  exec('shutdown /s /t 0');
-});
-
-ipcMain.handle('sys-lock', () => {
-  exec('rundll32.exe user32.dll,LockWorkStation');
 });
 
 // ── Process Manager (Task Manager) ──

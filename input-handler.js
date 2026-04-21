@@ -43,6 +43,7 @@ const MOUSEEVENTF_MIDDLEDOWN  = 0x0020;
 const MOUSEEVENTF_MIDDLEUP    = 0x0040;
 const MOUSEEVENTF_WHEEL       = 0x0800;
 const MOUSEEVENTF_HWHEEL      = 0x1000;
+const MOUSEEVENTF_ABSOLUTE    = 0x8000;
 
 // ── Keyboard event flags ──
 const KEYEVENTF_KEYDOWN       = 0x0000;

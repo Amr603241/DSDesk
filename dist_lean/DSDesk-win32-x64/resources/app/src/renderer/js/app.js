@@ -3,10 +3,30 @@
  * Coordinates Signaling, WebRTC, and UI
  */
 
+// ── 1. IMMEDIATE SHORTCUT ACTIVATION (Safety Priority) ──
+window.addEventListener('keydown', (e) => {
+    // This MUST be the first code executed to ensure user can ALWAYS see logs
+    if (e.ctrlKey && e.shiftKey && e.key && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        const debugOverlay = document.getElementById('debug-overlay');
+        if (debugOverlay) {
+            debugOverlay.classList.toggle('hidden');
+            console.log(`[UI] Diagnostic Console Toggled via Shortcut`);
+        }
+    }
+}, true);
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // Global Error Catcher
+    // ── Global Error Safety Catch ──
     window.onerror = function(msg, url, line) {
-        if (window.logDebugToApp) window.logDebugToApp(`CRASH: ${msg} at ${line}`, 'error');
+        console.error(`[CATASTROPHIC] ${msg} at ${line}`);
+        const debug = document.getElementById('debug-content');
+        if (debug) {
+            const err = document.createElement('div');
+            err.style.color = '#ff4d4d';
+            err.textContent = `CRASH: ${msg} (${line})`;
+            debug.appendChild(err);
+        }
         return false;
     };
 
@@ -39,7 +59,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         serverUrlInput.parentElement?.classList.add('hidden');
     }
     
-    const signaling = new SignalingClient(savedServerUrl);
+    const signaling = (typeof io !== 'undefined') 
+        ? new SignalingClient(savedServerUrl) 
+        : null;
+
+    if (!signaling) {
+        logInitial('CRITICAL ERROR: Socket.io library failed to load locally.');
+        ui.showToast('خطأ فني: فشل تحميل مكتبة الاتصال. يرجى إعادة تشغيل البرنامج.', 'error');
+    }
+
     let webrtc;
     try {
         webrtc = new WebRTCManager();
@@ -93,34 +121,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Admin check failed:', e);
         }
 
-        logDebug(`[PHASE 3] Initiating Global Connection...`);
-        ui.showToast('جاري تنشيط السيرفر العالمي... يرجى الانتظار ثوانٍ قليلة', 'info');
+        logDebug(`[PHASE 3] Initiating Global Connection Sequence...`);
+        ui.showToast('جاري تحفيز السيرفر العالمي... [المرحلة 1]', 'info');
         
         let connected = false;
         let attempt = 0;
         
         while (!connected && attempt < 3) {
             attempt++;
-            logDebug(`[PHASE 3] Waking up server & connecting... (Attempt ${attempt}/3)`);
+            logDebug(`[CONNECT] Wakeup & Handshake Attempt ${attempt}/3...`);
             
             try {
                 // Pre-ping to wake up Render instances if asleep
-                await signaling.ping();
+                logDebug(`[PING] Sending wakeup signal to: ${signaling.serverUrl}`);
+                const ok = await signaling.ping();
+                logDebug(`[PING] Wakeup response: ${ok ? 'ACK' : 'FAIL (Expected on cold start)'}`);
                 
+                logDebug(`[SOCKET] Initiating Socket.io handshake...`);
                 await signaling.connect();
                 connected = true;
             } catch (connErr) {
-                logDebug(`[!] Attempt ${attempt} failed. Server may still be waking up.`, 'warn');
+                logDebug(`[!] Attempt ${attempt} delay: ${connErr.message}`, 'warn');
                 if (attempt < 3) {
-                    await new Promise(r => setTimeout(r, 4000)); // Wait 4s between retries
+                    ui.showToast(`إعادة محاولة الربط... (${attempt}/3)`, 'info');
+                    await new Promise(r => setTimeout(r, 4500)); // Increased wait for Render
                 } else {
                     throw connErr;
                 }
             }
         }
         
-        ui.showToast('جاري التسجيل... [2/2]', 'info');
-        logDebug(`[PHASE 4] Connection established. Registering...`);
+        ui.showToast('جاري تسجيل الجهاز... [المرحلة 2]', 'info');
+        logDebug(`[PHASE 4] Handshake successful. Registering device ID...`);
         
         signaling.register(deviceId, password, passwordEnabled);
         ui.setConnectionStatus(true, 'متصل');
@@ -573,16 +605,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         sendRemoteInput('keyup', e);
     });
 
-    // ── Hidden Developer Shortcut (Ctrl+Shift+D) ──
-    window.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
-            const debugOverlay = document.getElementById('debug-overlay');
-            if (debugOverlay) {
-                debugOverlay.classList.toggle('hidden');
-                logDebug(`[UI] Diagnostic Console Toggled via Shortcut`);
-            }
-        }
-    });
+    // Previous Shortcut location removed (Moved to top)
 
     // ── Session Controls ──
 
