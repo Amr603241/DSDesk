@@ -9,7 +9,7 @@
                     "dev": "concurrently \"npm run server\" \"electron . --multi-instance\" \"electron . --multi-instance\"",
                     "rebuild":  "electron-rebuild",
                     "build":  "electron-builder",
-                    "package":  "electron-packager . DSDesk --platform=win32 --arch=x64 --out=dist_lean --overwrite --prune --ignore=\"(dist|dist_completed|dist_lean|\\.git)\""
+                    "package": "electron-packager . DSDesk --platform=win32 --arch=x64 --out=dist_lean --overwrite --prune --ignore=\"(dist|dist_completed|dist_lean|dist_final|dist_final_exe|\\.git|.*\\.zip$|DSDesk_Pro_v2\\.1_Portable)\""
                 },
     "author":  "DSDesk",
     "license":  "MIT",

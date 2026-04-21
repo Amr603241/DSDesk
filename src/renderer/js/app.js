@@ -93,9 +93,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Admin check failed:', e);
         }
 
-        logDebug(`[PHASE 3] Attempting connection to signaling...`);
+        logDebug(`[PHASE 3] Initiating Global Connection...`);
+        ui.showToast('جاري تنشيط السيرفر العالمي... يرجى الانتظار ثوانٍ قليلة', 'info');
         
-        await signaling.connect();
+        let connected = false;
+        let attempt = 0;
+        
+        while (!connected && attempt < 3) {
+            attempt++;
+            logDebug(`[PHASE 3] Waking up server & connecting... (Attempt ${attempt}/3)`);
+            
+            try {
+                // Pre-ping to wake up Render instances if asleep
+                await signaling.ping();
+                
+                await signaling.connect();
+                connected = true;
+            } catch (connErr) {
+                logDebug(`[!] Attempt ${attempt} failed. Server may still be waking up.`, 'warn');
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 4000)); // Wait 4s between retries
+                } else {
+                    throw connErr;
+                }
+            }
+        }
         
         ui.showToast('جاري التسجيل... [2/2]', 'info');
         logDebug(`[PHASE 4] Connection established. Registering...`);

@@ -12,11 +12,24 @@ class SignalingClient {
     this.handlers = {};
   }
 
+  async ping() {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      await fetch(this.serverUrl, { mode: 'no-cors', signal: controller.signal });
+      clearTimeout(timeoutId);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   connect() {
     return new Promise((resolve, reject) => {
       this.socket = io(this.serverUrl, {
-        reconnectionAttempts: 5,
-        timeout: 10000
+        reconnectionAttempts: 10,
+        timeout: 45000,
+        transports: ['websocket', 'polling']
       });
 
       this.socket.on('connect', () => {
