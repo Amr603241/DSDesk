@@ -98,8 +98,11 @@ function handleInput(data) {
         // This is the industry standard for remote control to bypass scaling drift
         const screenWidth = user32.GetSystemMetrics(0);
         const screenHeight = user32.GetSystemMetrics(1);
-        const absX = Math.round((x * 65535) / screenWidth);
-        const absY = Math.round((y * 65535) / screenHeight);
+        
+        // Industry Standard: Map 0-65535 to physical pixels
+        // We use Math.floor to ensure we don't overflow the unsigned 16-bit range
+        const absX = Math.floor((x * 65535) / (screenWidth - 1));
+        const absY = Math.floor((y * 65535) / (screenHeight - 1));
         
         mouse_event_fn(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, absX, absY, 0, 0);
       }

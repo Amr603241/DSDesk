@@ -133,6 +133,8 @@ ipcMain.handle('sys-lock', () => {
 ipcMain.on('simulate-input', (event, data) => {
     if (inputHandler) {
         try {
+            if (data.type === 'mousemove' && Math.random() < 0.05) console.log(`[INPUT] Sampled Move to ${data.x},${data.y}`);
+            if (data.type !== 'mousemove') console.log(`[INPUT] Remote Type: ${data.type}`);
             inputHandler.handleInput(data);
         } catch (e) {
             console.error('[CRITICAL] Input simulation crashed:', e.message);

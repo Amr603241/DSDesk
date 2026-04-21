@@ -477,12 +477,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const rect = remoteVideo.getBoundingClientRect();
         webrtc.sendControlData({
-            type: 'input',
-            event: type,
+            type: type, // Radical: Send specific type (mousemove, etc) directly
             x: Math.round((e.clientX - rect.left) * (remoteVideo.videoWidth / rect.width)),
             y: Math.round((e.clientY - rect.top) * (remoteVideo.videoHeight / rect.height)),
             button: e.button,
             key: e.key,
+            code: e.code,
             deltaY: e.deltaY
         });
     };
