@@ -205,6 +205,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     webrtc.on('control-data', async (data) => {
         switch (data.type) {
             case 'input':
+            case 'mousemove':
+            case 'mousedown':
+            case 'mouseup':
+            case 'wheel':
+            case 'keydown':
+            case 'keyup':
                 if (state.isHost) window.dsdesk.simulateInput(data);
                 break;
             case 'sys-stats':

@@ -24,7 +24,7 @@
     },
     "devDependencies": {
         "concurrently": "^8.2.2",
-        "electron": "^28.3.0",
+        "electron": "^28.3.3",
         "electron-builder": "^24.13.3",
         "electron-packager": "^17.1.2",
         "electron-rebuild": "^3.2.9"
