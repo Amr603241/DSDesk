@@ -249,8 +249,11 @@
     <!-- ─────────── SESSION VIEW ─────────── -->
     <section class="view" id="view-session">
       <div class="session-container">
+        <!-- Stealth Auto-Hide Trigger Area -->
+        <div class="stealth-trigger" id="stealth-trigger"></div>
+        
         <!-- Session Toolbar -->
-        <div class="session-toolbar" id="session-toolbar">
+        <div class="session-toolbar auto-hide" id="session-toolbar">
           <div class="toolbar-right">
             <div class="session-indicator">
               <span class="pulse-dot"></span>
@@ -536,8 +539,31 @@
         <label class="checkbox-container">
           <input type="checkbox" id="check-trust-device">
           <span class="checkmark"></span>
-          الثقة بهذا الجهاز دائماً (دخول سريع)
+          الموافقة التلقائية مستقبلاً (دخول سريع)
         </label>
+      </div>
+
+      <!-- Permission Sentinel Grid -->
+      <div class="permissions-sentinel">
+        <label class="sentinel-label">صلاحيات الجلسة:</label>
+        <div class="sentinel-grid">
+          <div class="sentinel-item active" id="perm-mouse" title="التحكم بالماوس">
+            <i class="fas fa-mouse-pointer"></i>
+            <span>ماوس</span>
+          </div>
+          <div class="sentinel-item active" id="perm-keyboard" title="لوحة المفاتيح">
+            <i class="fas fa-keyboard"></i>
+            <span>كيبورد</span>
+          </div>
+          <div class="sentinel-item active" id="perm-clipboard" title="تزامن الحافظة">
+            <i class="fas fa-paste"></i>
+            <span>حافظة</span>
+          </div>
+          <div class="sentinel-item" id="perm-files" title="نقل الملفات">
+            <i class="fas fa-file-export"></i>
+            <span>ملفات</span>
+          </div>
+        </div>
       </div>
 
       <div class="modal-actions">

@@ -97,10 +97,10 @@ class WebRTCManager {
 
     // Data channel setup
     if (isOfferer) {
-      // Use unordered mode to prevent Head-of-Line blocking (stuttering)
+      // AnyDesk-Elite: Use unordered/unreliable mode for zero-latency inputs
       this._setupDataChannel(this.peerConnection.createDataChannel('control-channel', {
-          ordered: true,
-          maxRetransmits: null // Unlimited retransmits for control fidelity
+          ordered: false,
+          maxRetransmits: 0 
       }));
     } else {
       this.peerConnection.ondatachannel = (event) => {
@@ -188,7 +188,7 @@ class WebRTCManager {
             maxWidth: 1920, 
             minHeight: 720,
             maxHeight: 1080,
-            maxFrameRate: 30 // Balanced 30fps for remote control
+            maxFrameRate: 60 // Ghost-Speed: 60fps for enterprise smoothness
           }
         }
       });

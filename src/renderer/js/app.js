@@ -20,7 +20,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         lastClipboard: '',
         statsInterval: null,
         clipboardInterval: null,
-        receivingFiles: {}
+        receivingFiles: {},
+        // AnyDesk-Elite: Address Book
+        recentConnections: JSON.parse(localStorage.getItem('dsdesk_recent') || '[]'),
+        deviceNicknames: JSON.parse(localStorage.getItem('dsdesk_nicknames') || '{}'),
+        permissions: {
+            allowMouse: true,
+            allowKeyboard: true,
+            allowClipboard: true,
+            allowFiles: true
+        }
     };
 
     // ── 2. Diagnostic Logging ──
@@ -79,6 +88,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.setConnectionStatus(true, 'متصل');
         logDebug('Device Online & Registered.');
 
+        // Initialize Address Book UI
+        refreshAddressBook();
+
         // Initialize display info
         const stats = await window.dsdesk.getSystemStats();
         document.getElementById('device-hostname').innerText = stats.hostname;
@@ -95,10 +107,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     signaling.on('connection-request', async ({ from, fromSocketId }) => {
         const trusted = await window.dsdesk.getTrustedDevices();
         
-        const accept = (shouldTrust) => {
+        const accept = (shouldTrust, permissions = null) => {
             state.isHost = true;
             state.currentRemoteSocketId = fromSocketId;
             state.currentRemoteDeviceId = from;
+            
+            if (permissions) {
+                state.permissions = permissions;
+                logDebug(`Session started with custom permissions: ${Object.keys(permissions).filter(k => permissions[k]).join(', ')}`);
+            }
+
             if (shouldTrust) window.dsdesk.addTrustedDevice(from);
             signaling.acceptConnection(fromSocketId);
             ui.showToast(`تم قبول الاتصال من ${from}`, 'success');
@@ -211,12 +229,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'wheel':
             case 'keydown':
             case 'keyup':
-                if (state.isHost) window.dsdesk.simulateInput(data);
+                if (state.isHost) {
+                    // Permission Check: Mouse/Keyboard Sentinel
+                    const isMouse = ['mousemove', 'mousedown', 'mouseup', 'wheel'].includes(data.type);
+                    const isKeyboard = ['keydown', 'keyup'].includes(data.type);
+                    
+                    if (isMouse && !state.permissions.allowMouse) return;
+                    if (isKeyboard && !state.permissions.allowKeyboard) return;
+
+                    window.dsdesk.simulateInput(data);
+                }
                 break;
             case 'sys-stats':
                 updateSessionStats(data.cpu, data.ram);
                 break;
             case 'clipboard-sync':
+                if (state.isHost && !state.permissions.allowClipboard) return;
                 state.lastClipboard = data.text;
                 await window.dsdesk.writeClipboard(data.text);
                 break;
@@ -294,6 +322,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('btn-connect-content').classList.add('hidden');
         document.getElementById('btn-connect-loader').classList.remove('hidden');
         
+        saveToRecent(targetId);
         signaling.requestConnection(targetId, targetPwd);
 
         // Timeout safeguard
@@ -304,6 +333,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }, 15000);
     };
+
+    // ── Address Book Logic ──
+    function saveToRecent(id) {
+        if (!state.recentConnections.includes(id)) {
+            state.recentConnections.unshift(id);
+            if (state.recentConnections.length > 10) state.recentConnections.pop();
+            localStorage.setItem('dsdesk_recent', JSON.stringify(state.recentConnections));
+        }
+        refreshAddressBook();
+    }
+
+    function refreshAddressBook() {
+        ui.renderRecent(state.recentConnections, state.deviceNicknames);
+        
+        // Add listeners to rendered items
+        document.querySelectorAll('.btn-quick-connect').forEach(btn => {
+            btn.onclick = () => {
+                const id = btn.getAttribute('data-id');
+                remoteIdInput.value = id;
+                connectForm.dispatchEvent(new Event('submit'));
+            };
+        });
+
+        document.querySelectorAll('.btn-rename-device').forEach(btn => {
+            btn.onclick = () => {
+                const id = btn.getAttribute('data-id');
+                const oldNick = state.deviceNicknames[id] || `جهاز ${id}`;
+                const newNick = prompt('أدخل الاسم الجديد للجهاز:', oldNick);
+                if (newNick !== null) {
+                    state.deviceNicknames[id] = newNick;
+                    localStorage.setItem('dsdesk_nicknames', JSON.stringify(state.deviceNicknames));
+                    refreshAddressBook();
+                }
+            };
+        });
+    }
 
     function resetConnectButton() {
         if (state.connTimeout) clearTimeout(state.connTimeout);
