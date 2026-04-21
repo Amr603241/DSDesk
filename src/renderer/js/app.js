@@ -473,24 +473,76 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Remote Input Forwarding
+    // Remote Input Forwarding - Professional Optimization v1.9.0
     const remoteVideo = document.getElementById('remote-video');
     let lastMove = 0;
+    
+    // Performance Cache: Avoid getBoundingClientRect on every move
+    let cachedRect = null;
+    const updateVideoCache = () => {
+        if (!remoteVideo) return;
+        cachedRect = remoteVideo.getBoundingClientRect();
+    };
+    
+    // Listen for resize to invalidate cache
+    window.addEventListener('resize', updateVideoCache);
+    const resizeObserver = new ResizeObserver(updateVideoCache);
+    resizeObserver.observe(remoteVideo);
+
     const sendInput = (type, e) => {
         if (state.isHost || !state.currentRemoteSocketId) return;
-        if (type === 'mousemove' && Date.now() - lastMove < 30) return;
-        lastMove = Date.now();
         
-        const rect = remoteVideo.getBoundingClientRect();
-        webrtc.sendControlData({
-            type: type, // Radical: Send specific type (mousemove, etc) directly
-            x: Math.round((e.clientX - rect.left) * (remoteVideo.videoWidth / rect.width)),
-            y: Math.round((e.clientY - rect.top) * (remoteVideo.videoHeight / rect.height)),
-            button: e.button,
-            key: e.key,
-            code: e.code,
-            deltaY: e.deltaY
-        });
+        // 60 FPS Throttle (16ms) - Industry Standard
+        if (type === 'mousemove') {
+            const now = Date.now();
+            if (now - lastMove < 16) return;
+            lastMove = now;
+        }
+
+        if (!cachedRect) updateVideoCache();
+        
+        // --- High Precision "Letterbox" Mapping ---
+        // Handles object-fit: contain black bars
+        const containerW = cachedRect.width;
+        const containerH = cachedRect.height;
+        const videoW = remoteVideo.videoWidth || 1920;
+        const videoH = remoteVideo.videoHeight || 1080;
+        
+        const containerRatio = containerW / containerH;
+        const videoRatio = videoW / videoH;
+        
+        let actualW, actualH, offsetX, offsetY;
+        
+        if (containerRatio > videoRatio) {
+            // Limited by height (bars on side)
+            actualH = containerH;
+            actualW = containerH * videoRatio;
+            offsetX = (containerW - actualW) / 2;
+            offsetY = 0;
+        } else {
+            // Limited by width (bars on top/bottom)
+            actualW = containerW;
+            actualH = containerW / videoRatio;
+            offsetX = 0;
+            offsetY = (containerH - actualH) / 2;
+        }
+
+        // Relative coordinates within the ACTUAL video area
+        const relX = (e.clientX - cachedRect.left - offsetX) / actualW;
+        const relY = (e.clientY - cachedRect.top - offsetY) / actualH;
+
+        // Only send if within bounds
+        if (relX >= 0 && relX <= 1 && relY >= 0 && relY <= 1) {
+            webrtc.sendControlData({
+                type: type,
+                x: Math.round(relX * videoW),
+                y: Math.round(relY * videoH),
+                button: e.button,
+                key: e.key,
+                code: e.code,
+                deltaY: e.deltaY
+            });
+        }
     };
 
     remoteVideo.addEventListener('mousemove', (e) => sendInput('mousemove', e));
@@ -499,5 +551,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     remoteVideo.addEventListener('wheel', (e) => { e.preventDefault(); sendInput('wheel', e); }, { passive: false });
     window.addEventListener('keydown', (e) => { if (ui.views.session.classList.contains('active')) sendInput('keydown', e); });
     window.addEventListener('keyup', (e) => { if (ui.views.session.classList.contains('active')) sendInput('keyup', e); });
+
+    // --- Professional Tool Actions ---
+    document.getElementById('btn-tasks-toggle').onclick = () => {
+        if (state.currentRemoteSocketId) {
+            webrtc.sendControlData({ type: 'shortcut', action: 'task-mgr' });
+            ui.showToast('جاري فتح مدير المهام...', 'info');
+        }
+    };
+
+    document.getElementById('btn-power-menu').onclick = () => {
+        document.getElementById('power-modal').classList.remove('hidden');
+    };
+
+    document.getElementById('action-lock').onclick = () => {
+        webrtc.sendControlData({ type: 'shortcut', action: 'lock' });
+        document.getElementById('power-modal').classList.add('hidden');
+    };
+
+    document.getElementById('action-reboot').onclick = () => {
+        if (confirm('هل أنت متأكد من إعادة تشغيل الجهاز البعيد؟')) {
+            webrtc.sendControlData({ type: 'shortcut', action: 'reboot' });
+        }
+    };
+
+    // System Monitor logic
+    setInterval(() => {
+        if (state.currentRemoteSocketId && ui.views.session.classList.contains('active')) {
+            // In a real app, the host would push this, but let's simulate or trigger a request
+            // webrtc.sendControlData({ type: 'request-stats' });
+        }
+    }, 2000);
 
 });
