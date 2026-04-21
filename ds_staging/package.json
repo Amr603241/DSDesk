@@ -1,0 +1,47 @@
+{
+    "name":  "dsdesk",
+    "version": "1.8.0",
+    "description":  "DSDesk - Remote Desktop Application",
+    "main":  "index.js",
+    "scripts":  {
+                    "start":  "electron .",
+                    "server":  "node server/signaling-server.js",
+                    "dev": "concurrently \"npm run server\" \"electron . --multi-instance\" \"electron . --multi-instance\"",
+                    "rebuild":  "electron-rebuild",
+                    "build":  "electron-builder",
+                    "package":  "electron-packager . DSDesk --platform=win32 --arch=x64 --out=dist_lean --overwrite --prune --ignore=\"(dist|dist_completed|dist_lean|\\.git)\""
+                },
+    "author":  "DSDesk",
+    "license":  "MIT",
+    "dependencies":  {
+                         "electron-store":  "^8.1.0",
+                         "express":  "^4.21.0",
+                         "koffi":  "^2.9.0",
+                         "socket.io":  "^4.7.5",
+                         "socket.io-client":  "^4.7.5",
+                         "systeminformation":  "^5.31.5"
+                     },
+    "devDependencies":  {
+                            "concurrently":  "^8.2.2",
+                            "electron":  "^28.3.0",
+                            "electron-builder":  "^24.13.3",
+                            "electron-packager":  "^17.1.2",
+                            "electron-rebuild":  "^3.2.9"
+                        },
+    "build":  {
+                  "appId":  "com.dsdesk.app",
+                  "productName":  "DSDesk",
+                  "win":  {
+                               "target":  ["portable"],
+                               "signingHashAlgorithms": null,
+                               "certificateFile": null,
+                               "sign": null
+                           },
+                  "portable":  {
+                                   "artifactName":  "DSDesk_Portable_v1.8.0.exe",
+                                   "unicode":  true
+                               },
+                  "forceCodeSigning":  false,
+                  "extraResources":  ["server/**"]
+              }
+}

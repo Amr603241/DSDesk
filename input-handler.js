@@ -88,12 +88,25 @@ function handleInput(data) {
   switch (data.type) {
     case 'mousemove':
       if (x !== null && y !== null) {
-        SetCursorPos(x, y);
+        // Use high-precision absolute coordinates (0-65535)
+        // This is the industry standard for remote control to bypass scaling drift
+        const screenWidth = user32.GetSystemMetrics(0);
+        const screenHeight = user32.GetSystemMetrics(1);
+        const absX = Math.round((x * 65535) / screenWidth);
+        const absY = Math.round((y * 65535) / screenHeight);
+        
+        mouse_event_fn(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, absX, absY, 0, 0);
       }
       break;
 
     case 'mousedown':
-      if (x !== null && y !== null) SetCursorPos(x, y);
+      if (x !== null && y !== null) {
+        const screenWidth = user32.GetSystemMetrics(0);
+        const screenHeight = user32.GetSystemMetrics(1);
+        const absX = Math.round((x * 65535) / screenWidth);
+        const absY = Math.round((y * 65535) / screenHeight);
+        mouse_event_fn(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, absX, absY, 0, 0);
+      }
       if (data.button === 0) mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
       else if (data.button === 2) mouse_event_fn(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
       else if (data.button === 1) mouse_event_fn(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 0);

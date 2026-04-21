@@ -81,6 +81,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.setPasswordEnabled(passwordEnabled);
         
         ui.showToast('جاري الاتصال... [1/2]', 'info');
+        
+        // Critical: Check if Host is running as Admin (for remote control permissions)
+        try {
+            const isAdmin = await window.dsdesk.isAdmin();
+            if (!isAdmin) {
+                console.warn('[!] Not running as Admin. Input control will be restricted.');
+                ui.showToast('تنبيه: يرجى تشغيل البرنامج كمسؤول (Administrator) لضمان دقة وبرمجية التحكم المطلقة.', 'warning');
+            }
+        } catch (e) {
+            console.error('Admin check failed:', e);
+        }
+
         logDebug(`[PHASE 3] Attempting connection to signaling...`);
         
         await signaling.connect();
@@ -403,10 +415,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                     webrtc.sendControlData({ type: 'terminal-data', text });
                 });
             }
-        } else if (data.type === 'terminal-data') {
-            appendTerminalOutput(data.text);
-        } else if (data.type === 'terminal-input') {
-            if (isHost) window.dsdesk.sendShellInput(data.text);
+        } else if (data.type === 'cursor-pos' || data.type === 'mousemove') {
+            // Update virtual cursor position on the viewer side
+            if (!isHost) {
+                const vCursor = document.getElementById('virtual-cursor');
+                if (vCursor && data.x !== undefined && data.y !== undefined) {
+                    const rect = remoteVideo.getBoundingClientRect();
+                    const videoWidth = remoteVideo.videoWidth;
+                    const videoHeight = remoteVideo.videoHeight;
+                    
+                    if (videoWidth && videoHeight) {
+                        const videoRatio = videoWidth / videoHeight;
+                        const elementRatio = rect.width / rect.height;
+                        let actualWidth, actualHeight, offsetX, offsetY;
+
+                        if (elementRatio > videoRatio) {
+                            actualHeight = rect.height;
+                            actualWidth = actualHeight * videoRatio;
+                            offsetX = (rect.width - actualWidth) / 2;
+                            offsetY = 0;
+                        } else {
+                            actualWidth = rect.width;
+                            actualHeight = actualWidth / videoRatio;
+                            offsetX = 0;
+                            offsetY = (rect.height - actualHeight) / 2;
+                        }
+
+                        const screenX = (data.x / videoWidth) * actualWidth + offsetX;
+                        const screenY = (data.y / videoHeight) * actualHeight + offsetY;
+
+                        vCursor.style.transform = `translate(${screenX}px, ${screenY}px)`;
+                        vCursor.style.display = 'block';
+                    }
+                }
+            }
         }
     });
 

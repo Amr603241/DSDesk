@@ -101,6 +101,16 @@ function createWindow() {
 // Device info
 ipcMain.handle('get-device-id', () => getDeviceId());
 
+ipcMain.handle('is-admin', () => {
+    try {
+        // 'net session' only succeeds if running as Administrator
+        require('child_process').execSync('net session', { stdio: 'ignore' });
+        return true;
+    } catch (e) {
+        return false;
+    }
+});
+
 ipcMain.handle('get-password', () => {
   let pwd = store.get('password');
   if (!pwd) {
