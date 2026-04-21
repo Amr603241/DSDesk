@@ -16,6 +16,14 @@ const store = new Store();
 let mainWindow;
 let inputHandler;
 
+// ── Load Input Handler ──
+try {
+  inputHandler = require('./src/main/input-handler');
+  console.log('[✓] Input handler bridge active');
+} catch (e) {
+  console.error('[✗] Input handler failed to load:', e.message);
+}
+
 // ── Device ID (9-digit unique identifier like AnyDesk) ──
 // ── Device ID (9-digit unique identifier based on hardware) ──
 async function getDeviceId() {
@@ -95,6 +103,29 @@ function createWindow() {
     console.error('[✗] Input handler failed to load:', e.message);
   }
 }
+
+// ── System Controls ──
+ipcMain.handle('sys-reboot', () => {
+    exec('shutdown /r /t 0');
+    return true;
+});
+
+ipcMain.handle('sys-shutdown', () => {
+    exec('shutdown /s /t 0');
+    return true;
+});
+
+ipcMain.handle('sys-lock', () => {
+    exec('rundll32.exe user32.dll,LockWorkStation');
+    return true;
+});
+
+// ── Input Simulation Bridge ──
+ipcMain.on('simulate-input', (event, data) => {
+    if (inputHandler) {
+        inputHandler.handleInput(data);
+    }
+});
 
 // ── IPC Handlers ──
 

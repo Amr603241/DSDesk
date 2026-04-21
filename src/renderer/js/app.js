@@ -126,6 +126,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.setConnectionStatus(true, 'متصل');
         logDebug(`[SUCCESS] Device online.`);
 
+        // ── RECEIVER ACTIVATION (Radical Fix) ──
+        // Listen for control commands from the remote viewer and execute them locally
+        webrtc.on('control-data', (data) => {
+            window.dsdesk.simulateInput(data);
+        });
+
         // Deferred stats initialization
         logDebug(`[STATS] Fetching system info...`);
         window.dsdesk.getSystemStats().then(stats => {
@@ -583,6 +589,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-disconnect').onclick = () => endSession();
     
     function endSession() {
+        logDebug('[SESSION] Ending current session and cleaning up...');
         if (currentRemoteSocketId) {
             signaling.endSession(currentRemoteSocketId);
         }
@@ -592,12 +599,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         stopSessionTasks();
     }
 
+    function resetConnectionState() {
+        logDebug('[STATE] Resetting connection flags');
+        currentRemoteSocketId = null;
+        currentRemoteDeviceId = null;
+        isHost = false;
+        ui.setConnectionStatus(true, 'متصل (جاهز)');
+        
+        // Ensure UI is clean
+        if (remoteVideo) remoteVideo.srcObject = null;
+        ui.setConnectingOverlay(false);
+    }
+
     signaling.on('session-ended', ({ message }) => {
+        logDebug(`[SESSION] Remote peer ended session: ${message}`);
         ui.showToast(message, 'info');
         webrtc.close();
         ui.switchView('home');
-        function resetConnectionState() {
-        currentRemoteSocketId = null;
+        resetConnectionState();
+    });
         currentRemoteDeviceId = null;
         if (statsInterval) clearInterval(statsInterval);
         if (clipboardInterval) clearInterval(clipboardInterval);
