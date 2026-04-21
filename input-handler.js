@@ -14,6 +14,11 @@ try {
   mouse_event_fn = user32.func('void __stdcall mouse_event(unsigned int dwFlags, unsigned int dx, unsigned int dy, unsigned int dwData, uintptr_t dwExtraInfo)');
   keybd_event_fn = user32.func('void __stdcall keybd_event(unsigned char bVk, unsigned char bScan, unsigned int dwFlags, uintptr_t dwExtraInfo)');
 
+  // High-precision Resolution Discovery
+  // SM_CXSCREEN = 0, SM_CYSCREEN = 1
+  const GetSystemMetrics = user32.func('int __stdcall GetSystemMetrics(int nIndex)');
+  user32.GetSystemMetrics = GetSystemMetrics; // Attach for easy access in handlers
+
   // Enforce DPI awareness to ensure SetCursorPos works with physical pixels
   try {
     const SetProcessDPIAware = user32.func('int __stdcall SetProcessDPIAware()');

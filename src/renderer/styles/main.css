@@ -2043,3 +2043,102 @@ html, body {
     transition: transform 0.05s linear;
     display: none;
 }
+
+/* ?? DSDesk Pro: Master Styling (Glassmorphism & Neon) ?? */
+:root {
+  --pro-primary: #a855f7;
+  --pro-secondary: #06b6d4;
+  --pro-bg: #09090b;
+  --pro-surface: rgba(24, 24, 27, 0.8);
+  --pro-glow: rgba(168, 85, 247, 0.4);
+}
+
+.pro-dashboard {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 280px;
+  background: var(--pro-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 15px;
+  color: white;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.3s ease;
+  opacity: 0.9;
+}
+
+.pro-dashboard:hover {
+  opacity: 1;
+  border-color: var(--pro-primary);
+}
+
+.dash-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dash-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash-label {
+  font-size: 0.65rem;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dash-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f4f4f5;
+}
+
+.dash-value-sub {
+  font-size: 0.75rem;
+  color: var(--pro-secondary);
+}
+
+.dash-progress-wrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.dash-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--pro-primary), var(--pro-secondary));
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px var(--pro-glow);
+}
+
+/* ?? Pro Branding ?? */
+.badge-pro {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+  text-transform: uppercase;
+}
+
+.pro-glow {
+  box-shadow: 0 0 15px var(--pro-glow) !important;
+  border: 1px solid var(--pro-primary) !important;
+}
+
+.remote-screen {
+    cursor: crosshair; /* Better for precision control */
+}

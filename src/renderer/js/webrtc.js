@@ -326,16 +326,29 @@ class WebRTCManager {
   }
 
   close() {
+    console.log('[RTC] Closing peer connection and cleaning up resources...');
     if (this.localStream) {
-      this.localStream.getTracks().forEach(track => track.stop());
+      this.localStream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`[RTC] Local track stopped: ${track.kind}`);
+      });
+    }
+    if (this.remoteStream) {
+        this.remoteStream.getTracks().forEach(track => track.stop());
     }
     if (this.peerConnection) {
       this.peerConnection.close();
+      this.peerConnection.onicecandidate = null;
+      this.peerConnection.ontrack = null;
+      this.peerConnection.oniceconnectionstatechange = null;
+      this.peerConnection.onconnectionstatechange = null;
+      this.peerConnection.ondatachannel = null;
     }
     this.peerConnection = null;
     this.dataChannel = null;
     this.localStream = null;
     this.remoteStream = null;
+    console.log('[RTC] Cleanup complete.');
   }
 
   // ── Event Bus ──

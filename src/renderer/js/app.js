@@ -631,22 +631,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ── Tasks & Stats ──
 
     function startSessionTasks() {
-        // Stats loop (Host sends to Controller)
+        logDebug(`[SESSION] Initializing Pro Background Tasks...`);
+        
+        // 1. Unified Clipboard Sync (Every 1.5s)
+        clipboardInterval = setInterval(async () => {
+            const currentClip = await window.dsdesk.readClipboard();
+            if (currentClip && currentClip !== lastClipboard) {
+                lastClipboard = currentClip;
+                webrtc.sendControlData({ type: 'clipboard-sync', text: currentClip });
+                logDebug(`[CLIPBOARD] Sync Sent`);
+            }
+        }, 1500);
+
+        // 2. Host Pro Stats Reporting (Every 3s)
         if (isHost) {
             statsInterval = setInterval(async () => {
-                const stats = await window.dsdesk.getSystemStats();
-                webrtc.sendControlData({ type: 'sys-stats', ...stats });
+                try {
+                    const info = await window.dsdesk.getSystemInfo();
+                    webrtc.sendControlData({ type: 'system-stats', info });
+                } catch (e) {
+                    console.error('Stats fetch failed:', e);
+                }
             }, 3000);
         }
-
-        // Clipboard sync loop
-        clipboardInterval = setInterval(async () => {
-            const current = await window.dsdesk.readClipboard();
-            if (current && current !== lastClipboard) {
-                lastClipboard = current;
-                webrtc.sendControlData({ type: 'clipboard-sync', text: current });
-            }
-        }, 2000);
     }
 
     function stopSessionTasks() {
@@ -654,15 +661,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (clipboardInterval) clearInterval(clipboardInterval);
         statsInterval = null;
         clipboardInterval = null;
+        logDebug(`[SESSION] Tasks Cleaned.`);
     }
 
-    function updateStatsUI(cpu, ram) {
-        const cpuEl = document.getElementById('stat-cpu');
-        const ramEl = document.getElementById('stat-ram');
-        cpuEl.querySelector('span').textContent = `CPU: ${cpu}%`;
-        ramEl.querySelector('span').textContent = `RAM: ${ram}%`;
-        cpuEl.classList.toggle('high', cpu > 80);
-        ramEl.classList.toggle('high', ram > 85);
+    function updateProDashboard(info) {
+        if (!info) return;
+        
+        const osEl = document.getElementById('dash-os');
+        const cpuEl = document.getElementById('dash-cpu');
+        const ramBar = document.getElementById('dash-ram-bar');
+        const ramText = document.getElementById('dash-ram-text');
+        const uptimeEl = document.getElementById('dash-uptime');
+
+        if (osEl) osEl.textContent = `${info.platform} ${info.arch}`;
+        if (cpuEl) cpuEl.textContent = info.cpuModel.split('@')[0].trim();
+        if (ramBar) ramBar.style.width = `${info.usedMemoryPercent}%`;
+        if (ramText) ramText.textContent = `${info.usedMemoryPercent}% (${info.totalMemory - info.freeMemory}GB / ${info.totalMemory}GB)`;
+        if (uptimeEl) uptimeEl.textContent = `${info.uptime} ساعة`;
+
+        // Pulse effect on update
+        const dash = document.getElementById('pro-dashboard');
+        dash.style.borderColor = 'var(--pro-primary)';
+        setTimeout(() => dash.style.borderColor = 'rgba(255, 255, 255, 0.1)', 500);
     }
 
     // ── File Transfer ──

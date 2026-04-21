@@ -369,6 +369,32 @@
         <div class="remote-screen" id="remote-screen">
           <video id="remote-video" autoplay muted playsinline></video>
           <div id="virtual-cursor" class="virtual-cursor"></div>
+          
+          <!-- Pro System Dashboard Overlay -->
+          <div class="pro-dashboard" id="pro-dashboard">
+            <div class="dash-grid">
+              <div class="dash-item">
+                <span class="dash-label">نظام التشغيل</span>
+                <span class="dash-value" id="dash-os">--</span>
+              </div>
+              <div class="dash-item">
+                <span class="dash-label">المعالج</span>
+                <span class="dash-value" id="dash-cpu">--</span>
+              </div>
+              <div class="dash-item">
+                <span class="dash-label">الذاكرة (RAM)</span>
+                <div class="dash-progress-wrap">
+                  <div class="dash-progress-bar" id="dash-ram-bar" style="width: 0%"></div>
+                </div>
+                <span class="dash-value-sub" id="dash-ram-text">--</span>
+              </div>
+              <div class="dash-item">
+                <span class="dash-label">مدة التشغيل</span>
+                <span class="dash-value" id="dash-uptime">--</span>
+              </div>
+            </div>
+          </div>
+
           <div class="connecting-overlay" id="connecting-overlay">
             <div class="spinner-lg"></div>
             <p class="connecting-text">جاري الاتصال بالجهاز البعيد...</p>
