@@ -14,7 +14,20 @@ try {
   mouse_event_fn = user32.func('void __stdcall mouse_event(unsigned int dwFlags, unsigned int dx, unsigned int dy, unsigned int dwData, uintptr_t dwExtraInfo)');
   keybd_event_fn = user32.func('void __stdcall keybd_event(unsigned char bVk, unsigned char bScan, unsigned int dwFlags, uintptr_t dwExtraInfo)');
 
-  console.log('[✓] Windows API (user32.dll) loaded via koffi');
+  // High-precision Resolution Discovery
+  // SM_CXSCREEN = 0, SM_CYSCREEN = 1
+  const GetSystemMetrics = user32.func('int __stdcall GetSystemMetrics(int nIndex)');
+  user32.GetSystemMetrics = GetSystemMetrics; // Attach for easy access in handlers
+
+  // Enforce DPI awareness to ensure SetCursorPos works with physical pixels
+  try {
+    const SetProcessDPIAware = user32.func('int __stdcall SetProcessDPIAware()');
+    SetProcessDPIAware();
+  } catch (e) {
+    console.warn('SetProcessDPIAware not supported or already set');
+  }
+
+  console.log('[✓] Windows API (user32.dll) loaded with High DPI awareness');
 } catch (e) {
   console.error('[✗] Failed to load koffi/user32.dll:', e.message);
   console.error('    Input simulation will be disabled.');
@@ -79,11 +92,26 @@ function handleInput(data) {
 
   switch (data.type) {
     case 'mousemove':
-      if (x !== null && y !== null) SetCursorPos(x, y);
+      if (x !== null && y !== null) {
+        // Use high-precision absolute coordinates (0-65535)
+        // This is the industry standard for remote control to bypass scaling drift
+        const screenWidth = user32.GetSystemMetrics(0);
+        const screenHeight = user32.GetSystemMetrics(1);
+        const absX = Math.round((x * 65535) / screenWidth);
+        const absY = Math.round((y * 65535) / screenHeight);
+        
+        mouse_event_fn(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, absX, absY, 0, 0);
+      }
       break;
 
     case 'mousedown':
-      if (x !== null && y !== null) SetCursorPos(x, y);
+      if (x !== null && y !== null) {
+        const screenWidth = user32.GetSystemMetrics(0);
+        const screenHeight = user32.GetSystemMetrics(1);
+        const absX = Math.round((x * 65535) / screenWidth);
+        const absY = Math.round((y * 65535) / screenHeight);
+        mouse_event_fn(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, absX, absY, 0, 0);
+      }
       if (data.button === 0) mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
       else if (data.button === 2) mouse_event_fn(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
       else if (data.button === 1) mouse_event_fn(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 0);

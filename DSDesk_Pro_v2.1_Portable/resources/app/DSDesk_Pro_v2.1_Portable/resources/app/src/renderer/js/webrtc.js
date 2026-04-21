@@ -91,7 +91,11 @@ class WebRTCManager {
 
     // Data channel setup
     if (isOfferer) {
-      this._setupDataChannel(this.peerConnection.createDataChannel('control-channel'));
+      // Use unordered mode to prevent Head-of-Line blocking (stuttering)
+      this._setupDataChannel(this.peerConnection.createDataChannel('control-channel', {
+          ordered: false,
+          maxRetransmits: 0
+      }));
     } else {
       this.peerConnection.ondatachannel = (event) => {
         this._setupDataChannel(event.channel);
@@ -170,15 +174,15 @@ class WebRTCManager {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
-          cursor: 'always', // Critical: Force hardware cursor capture
+          cursor: 'always', 
           mandatory: {
             chromeMediaSource: 'desktop',
             chromeMediaSourceId: primaryScreen.id,
             minWidth: 1280,
-            maxWidth: 1920, // Capped to 1080p for better stability
+            maxWidth: 1920, 
             minHeight: 720,
             maxHeight: 1080,
-            maxFrameRate: 30 // 30fps is more stable for remote control
+            maxFrameRate: 30 // Balanced 30fps for remote control
           }
         }
       });
@@ -187,7 +191,6 @@ class WebRTCManager {
 
       stream.getTracks().forEach(track => {
         if (track.kind === 'video') {
-            // Turbo Mode: Prioritize motion and fps over static text sharpess
             track.contentHint = 'motion';
         }
         this.peerConnection.addTrack(track, stream);
@@ -200,7 +203,8 @@ class WebRTCManager {
           if (videoSender) {
               const params = videoSender.getParameters();
               if (!params.encodings) params.encodings = [{}];
-              params.encodings[0].maxBitrate = 8000000; // 8 Megabits for fluid HD
+              // Optimized: 6Mbps is the safe ceiling for low-jitter HD
+              params.encodings[0].maxBitrate = 6000000; 
               params.encodings[0].degradationPreference = 'maintain-framerate';
               videoSender.setParameters(params).catch(e => console.warn('[RTC] Turbo Params failed:', e));
           }
@@ -255,12 +259,12 @@ class WebRTCManager {
 
   // Optimize SDP for faster initial connection and stable bitrate (Turbo Mode)
   _mungSDP(sdp) {
-    const bitrate = 8000; // Turbo: 8Mbps
+    const bitrate = 6000; // Balanced 6Mbps
     const lineEnding = sdp.includes('\r\n') ? '\r\n' : '\n';
     
     // Force immediate high bitrate ramp-up (Chromium extension)
     if (sdp.includes('VP8') || sdp.includes('H264')) {
-        sdp = sdp.replace(/a=fmtp:(.*) (.*)/g, 'a=fmtp:$1 $2;x-google-start-bitrate=5000;x-google-max-bitrate=10000;x-google-min-bitrate=2000');
+        sdp = sdp.replace(/a=fmtp:(.*) (.*)/g, 'a=fmtp:$1 $2;x-google-start-bitrate=4000;x-google-max-bitrate=8000;x-google-min-bitrate=1000');
     }
 
     if (sdp.indexOf('b=AS:') === -1) {
@@ -322,16 +326,29 @@ class WebRTCManager {
   }
 
   close() {
+    console.log('[RTC] Closing peer connection and cleaning up resources...');
     if (this.localStream) {
-      this.localStream.getTracks().forEach(track => track.stop());
+      this.localStream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`[RTC] Local track stopped: ${track.kind}`);
+      });
+    }
+    if (this.remoteStream) {
+        this.remoteStream.getTracks().forEach(track => track.stop());
     }
     if (this.peerConnection) {
       this.peerConnection.close();
+      this.peerConnection.onicecandidate = null;
+      this.peerConnection.ontrack = null;
+      this.peerConnection.oniceconnectionstatechange = null;
+      this.peerConnection.onconnectionstatechange = null;
+      this.peerConnection.ondatachannel = null;
     }
     this.peerConnection = null;
     this.dataChannel = null;
     this.localStream = null;
     this.remoteStream = null;
+    console.log('[RTC] Cleanup complete.');
   }
 
   // ── Event Bus ──

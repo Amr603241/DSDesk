@@ -368,32 +368,49 @@
         <!-- Remote Screen Display -->
         <div class="remote-screen" id="remote-screen">
           <video id="remote-video" autoplay muted playsinline></video>
+          
+          <!-- Elite Tools Toggle -->
+          <button class="btn-elite-tools" id="btn-toggle-admin" title="أدوات المدير"><i class="fas fa-tools"></i></button>
+          
           <div id="virtual-cursor" class="virtual-cursor"></div>
           
-          <!-- Pro System Dashboard Overlay -->
-          <div class="pro-dashboard" id="pro-dashboard">
-            <div class="dash-grid">
-              <div class="dash-item">
-                <span class="dash-label">نظام التشغيل</span>
-                <span class="dash-value" id="dash-os">--</span>
-              </div>
-              <div class="dash-item">
-                <span class="dash-label">المعالج</span>
-                <span class="dash-value" id="dash-cpu">--</span>
-              </div>
-              <div class="dash-item">
-                <span class="dash-label">الذاكرة (RAM)</span>
-                <div class="dash-progress-wrap">
-                  <div class="dash-progress-bar" id="dash-ram-bar" style="width: 0%"></div>
-                </div>
-                <span class="dash-value-sub" id="dash-ram-text">--</span>
-              </div>
-              <div class="dash-item">
-                <span class="dash-label">مدة التشغيل</span>
-                <span class="dash-value" id="dash-uptime">--</span>
+          <!-- Pro Elite Admin Center -->
+          <div class="pro-admin-sidebar" id="admin-sidebar">
+            <div class="sidebar-header">
+              <span class="sidebar-title">مركز التحكم الاحترافي</span>
+              <button class="btn-icon" id="btn-close-admin"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="sidebar-section">
+              <label class="section-label">أدوات الطاقة</label>
+              <div class="power-grid">
+                <button class="btn-power" id="btn-remote-restart" title="إعادة تشغيل"><i class="fas fa-sync"></i></button>
+                <button class="btn-power" id="btn-remote-lock" title="قفل"><i class="fas fa-lock"></i></button>
+                <button class="btn-power btn-danger" id="btn-remote-shutdown" title="إيقاف التشغيل"><i class="fas fa-power-off"></i></button>
               </div>
             </div>
+
+            <div class="sidebar-section">
+              <label class="section-label">مدير المهام (Task Manager)</label>
+              <div class="task-list-container">
+                <table class="pro-table" id="remote-task-table">
+                  <thead>
+                    <tr>
+                      <th>الاسم</th>
+                      <th>PID</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody id="task-body">
+                    <!-- Tasks injected here -->
+                  </tbody>
+                </table>
+              </div>
+              <button class="btn-secondary btn-sm full-width mt-10" id="btn-refresh-tasks">تحديث القائمة</button>
+            </div>
           </div>
+
+          <!-- Pro System Dashboard Overlay (Simplified) -->
 
           <div class="connecting-overlay" id="connecting-overlay">
             <div class="spinner-lg"></div>

@@ -81,6 +81,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.setPasswordEnabled(passwordEnabled);
         
         ui.showToast('جاري الاتصال... [1/2]', 'info');
+        
+        // Critical: Check if Host is running as Admin (for remote control permissions)
+        try {
+            const isAdmin = await window.dsdesk.isAdmin();
+            if (!isAdmin) {
+                console.warn('[!] Not running as Admin. Input control will be restricted.');
+                ui.showToast('تنبيه: يرجى تشغيل البرنامج كمسؤول (Administrator) لضمان دقة وبرمجية التحكم المطلقة.', 'warning');
+            }
+        } catch (e) {
+            console.error('Admin check failed:', e);
+        }
+
         logDebug(`[PHASE 3] Attempting connection to signaling...`);
         
         await signaling.connect();
@@ -403,10 +415,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                     webrtc.sendControlData({ type: 'terminal-data', text });
                 });
             }
-        } else if (data.type === 'terminal-data') {
-            appendTerminalOutput(data.text);
-        } else if (data.type === 'terminal-input') {
-            if (isHost) window.dsdesk.sendShellInput(data.text);
+        } else if (data.type === 'cursor-pos' || data.type === 'mousemove') {
+            // Update virtual cursor position on the viewer side
+            if (!isHost) {
+                const vCursor = document.getElementById('virtual-cursor');
+                if (vCursor && data.x !== undefined && data.y !== undefined) {
+                    const rect = remoteVideo.getBoundingClientRect();
+                    const videoWidth = remoteVideo.videoWidth;
+                    const videoHeight = remoteVideo.videoHeight;
+                    
+                    if (videoWidth && videoHeight) {
+                        const videoRatio = videoWidth / videoHeight;
+                        const elementRatio = rect.width / rect.height;
+                        let actualWidth, actualHeight, offsetX, offsetY;
+
+                        if (elementRatio > videoRatio) {
+                            actualHeight = rect.height;
+                            actualWidth = actualHeight * videoRatio;
+                            offsetX = (rect.width - actualWidth) / 2;
+                            offsetY = 0;
+                        } else {
+                            actualWidth = rect.width;
+                            actualHeight = actualWidth / videoRatio;
+                            offsetX = 0;
+                            offsetY = (rect.height - actualHeight) / 2;
+                        }
+
+                        const screenX = (data.x / videoWidth) * actualWidth + offsetX;
+                        const screenY = (data.y / videoHeight) * actualHeight + offsetY;
+
+                        vCursor.style.transform = `translate(${screenX}px, ${screenY}px)`;
+                        vCursor.style.display = 'block';
+                    }
+                }
+            }
         }
     });
 
@@ -422,7 +464,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const remoteVideo = document.getElementById('remote-video');
 
     let lastMoveTime = 0;
-    const MOVE_THROTTLE = 20; // 50fps max to prevent IPC flooding
+    const MOVE_THROTTLE = 30; // 33fps: Best balance for stability
 
     function sendRemoteInput(type, event) {
         if (isHost || !currentRemoteSocketId) return;
@@ -589,22 +631,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ── Tasks & Stats ──
 
     function startSessionTasks() {
-        // Stats loop (Host sends to Controller)
+        logDebug(`[SESSION] Initializing Pro Background Tasks...`);
+        
+        // 1. Unified Clipboard Sync (Every 1.5s)
+        clipboardInterval = setInterval(async () => {
+            const currentClip = await window.dsdesk.readClipboard();
+            if (currentClip && currentClip !== lastClipboard) {
+                lastClipboard = currentClip;
+                webrtc.sendControlData({ type: 'clipboard-sync', text: currentClip });
+                logDebug(`[CLIPBOARD] Sync Sent`);
+            }
+        }, 1500);
+
+        // 2. Host Pro Stats Reporting (Every 3s)
         if (isHost) {
             statsInterval = setInterval(async () => {
-                const stats = await window.dsdesk.getSystemStats();
-                webrtc.sendControlData({ type: 'sys-stats', ...stats });
+                try {
+                    const info = await window.dsdesk.getSystemInfo();
+                    webrtc.sendControlData({ type: 'system-stats', info });
+                } catch (e) {
+                    console.error('Stats fetch failed:', e);
+                }
             }, 3000);
         }
-
-        // Clipboard sync loop
-        clipboardInterval = setInterval(async () => {
-            const current = await window.dsdesk.readClipboard();
-            if (current && current !== lastClipboard) {
-                lastClipboard = current;
-                webrtc.sendControlData({ type: 'clipboard-sync', text: current });
-            }
-        }, 2000);
     }
 
     function stopSessionTasks() {
@@ -612,15 +661,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (clipboardInterval) clearInterval(clipboardInterval);
         statsInterval = null;
         clipboardInterval = null;
+        logDebug(`[SESSION] Tasks Cleaned.`);
     }
 
-    function updateStatsUI(cpu, ram) {
-        const cpuEl = document.getElementById('stat-cpu');
-        const ramEl = document.getElementById('stat-ram');
-        cpuEl.querySelector('span').textContent = `CPU: ${cpu}%`;
-        ramEl.querySelector('span').textContent = `RAM: ${ram}%`;
-        cpuEl.classList.toggle('high', cpu > 80);
-        ramEl.classList.toggle('high', ram > 85);
+    function updateProDashboard(info) {
+        if (!info) return;
+        
+        const osEl = document.getElementById('dash-os');
+        const cpuEl = document.getElementById('dash-cpu');
+        const ramBar = document.getElementById('dash-ram-bar');
+        const ramText = document.getElementById('dash-ram-text');
+        const uptimeEl = document.getElementById('dash-uptime');
+
+        if (osEl) osEl.textContent = `${info.platform} ${info.arch}`;
+        if (cpuEl) cpuEl.textContent = info.cpuModel.split('@')[0].trim();
+        if (ramBar) ramBar.style.width = `${info.usedMemoryPercent}%`;
+        if (ramText) ramText.textContent = `${info.usedMemoryPercent}% (${info.totalMemory - info.freeMemory}GB / ${info.totalMemory}GB)`;
+        if (uptimeEl) uptimeEl.textContent = `${info.uptime} ساعة`;
+
+        // Pulse effect on update
+        const dash = document.getElementById('pro-dashboard');
+        dash.style.borderColor = 'var(--pro-primary)';
+        setTimeout(() => dash.style.borderColor = 'rgba(255, 255, 255, 0.1)', 500);
     }
 
     // ── File Transfer ──

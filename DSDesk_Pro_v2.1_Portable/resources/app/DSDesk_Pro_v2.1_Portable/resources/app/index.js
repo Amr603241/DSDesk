@@ -101,6 +101,16 @@ function createWindow() {
 // Device info
 ipcMain.handle('get-device-id', () => getDeviceId());
 
+ipcMain.handle('is-admin', () => {
+    try {
+        // 'net session' only succeeds if running as Administrator
+        require('child_process').execSync('net session', { stdio: 'ignore' });
+        return true;
+    } catch (e) {
+        return false;
+    }
+});
+
 ipcMain.handle('get-password', () => {
   let pwd = store.get('password');
   if (!pwd) {
@@ -151,6 +161,27 @@ ipcMain.handle('get-screen-size', () => {
     height: primaryDisplay.size.height,
     scaleFactor: primaryDisplay.scaleFactor
   };
+});
+
+// Pro Feature: System Information & Stats
+ipcMain.handle('get-system-info', () => {
+    const os = require('os');
+    const cpus = os.cpus();
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    
+    return {
+        hostname: os.hostname(),
+        platform: os.platform(),
+        arch: os.arch(),
+        release: os.release(),
+        cpuModel: cpus[0].model,
+        cpuCount: cpus.length,
+        totalMemory: Math.round(totalMem / (1024 * 1024 * 1024)), // GB
+        freeMemory: Math.round(freeMem / (1024 * 1024 * 1024)), // GB
+        usedMemoryPercent: Math.round(((totalMem - freeMem) / totalMem) * 100),
+        uptime: Math.round(os.uptime() / 3600) // Hours
+    };
 });
 
 // Input simulation

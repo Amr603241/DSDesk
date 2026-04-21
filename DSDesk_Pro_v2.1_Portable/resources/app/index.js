@@ -427,17 +427,27 @@ ipcMain.handle('is-maximized', () => {
   return mainWindow ? mainWindow.isMaximized() : false;
 });
 
+// Pro Monitor Switcher State
+let selectedSourceId = null;
+ipcMain.handle('set-active-monitor', (event, sourceId) => {
+    selectedSourceId = sourceId;
+    return true;
+});
+
 // ── App lifecycle ──
 app.whenReady().then(() => {
   // Handle getDisplayMedia requests from renderer
   session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
-    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
-      if (sources.length > 0) {
-        callback({ video: sources[0] });
+    desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
+      // Find the specifically requested source or fallback to the first screen
+      const target = sources.find(s => s.id === selectedSourceId) || sources[0];
+      if (target) {
+        callback({ video: target });
       } else {
         callback({});
       }
-    }).catch(() => {
+    }).catch((err) => {
+      console.error('Display handler error:', err);
       callback({});
     });
   });

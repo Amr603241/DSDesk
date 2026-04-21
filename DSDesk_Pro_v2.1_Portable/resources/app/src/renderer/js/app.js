@@ -415,6 +415,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     webrtc.sendControlData({ type: 'terminal-data', text });
                 });
             }
+        } else if (data.type === 'task-list') {
+            renderTaskList(data.tasks);
         } else if (data.type === 'cursor-pos' || data.type === 'mousemove') {
             // Update virtual cursor position on the viewer side
             if (!isHost) {
@@ -738,6 +740,78 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         readNext();
     }
+
+    // ── Elite Admin Center Logic ──
+
+    const adminSidebar = document.getElementById('admin-sidebar');
+    const taskBody = document.getElementById('task-body');
+
+    document.getElementById('btn-toggle-admin').onclick = () => {
+        adminSidebar.classList.toggle('active');
+        if (adminSidebar.classList.contains('active')) refreshRemoteTasks();
+    };
+
+    document.getElementById('btn-close-admin').onclick = () => {
+        adminSidebar.classList.remove('active');
+    };
+
+    // Open Admin Sidebar (You might want to add a trigger button for this in index.html later)
+    // For now, let's auto-bind it or imagine a keyboard shortcut
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.altKey && e.code === 'KeyA') {
+            adminSidebar.classList.toggle('active');
+            if (adminSidebar.classList.contains('active')) refreshRemoteTasks();
+        }
+    });
+
+    // Remote Task Manager
+    async function refreshRemoteTasks() {
+        if (isHost || !currentRemoteSocketId) return;
+        
+        taskBody.innerHTML = '<tr><td colspan="3" style="text-align:center">جاري التحميل...</td></tr>';
+        
+        // Request task list from host via Data Channel
+        webrtc.sendControlData({ type: 'get-tasks' });
+    }
+
+    function renderTaskList(tasks) {
+        if (!tasks) return;
+        taskBody.innerHTML = '';
+        
+        tasks.forEach(task => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${task.name}</td>
+                <td>${task.pid}</td>
+                <td><button class="btn-sm-action" onclick="killProcess('${task.pid}')">إغلاق</button></td>
+            `;
+            taskBody.appendChild(tr);
+        });
+    }
+
+    window.killProcess = (pid) => {
+        if (confirm(`هل أنت متأكد من رغبتك في إغلاق العملية رقم ${pid}؟`)) {
+            webrtc.sendControlData({ type: 'kill-task', pid });
+            setTimeout(refreshRemoteTasks, 1000);
+        }
+    };
+
+    document.getElementById('btn-refresh-tasks').onclick = refreshRemoteTasks;
+
+    // Remote Power Controls
+    const powerActions = {
+        'btn-remote-restart': 'sys-reboot',
+        'btn-remote-lock': 'sys-lock',
+        'btn-remote-shutdown': 'sys-shutdown'
+    };
+
+    Object.entries(powerActions).forEach(([id, type]) => {
+        document.getElementById(id).onclick = () => {
+            if (confirm('هل أنت متأكد من تنفيذ هذا الإجراء في الجهاز البعيد؟')) {
+                webrtc.sendControlData({ type });
+            }
+        };
+    });
 
     function handleFileMeta(meta) {
         receivingFiles[meta.transferId] = {

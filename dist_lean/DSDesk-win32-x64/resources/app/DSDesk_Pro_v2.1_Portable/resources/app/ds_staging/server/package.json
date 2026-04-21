@@ -1,0 +1,9 @@
+{
+  "name": "dsdesk-server",
+  "version": "1.0.0",
+  "main": "signaling-server.js",
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.7.5"
+  }
+}

@@ -1,54 +1,58 @@
 /* ═══════════════════════════════════════════════════════
    DSDesk - Premium Remote Desktop UI
-   Design: Dark Glassmorphism + Orange/Purple Accent
+   Design: DSDesk ELITE PRO EDITION 
    ═══════════════════════════════════════════════════════ */
 
-/* ── CSS Custom Properties ── */
+/* ── CSS Custom Properties: DSDesk ELITE PRO EDITION ── */
 :root {
-  --bg-primary: #07090F;
-  --bg-secondary: #0D1117;
-  --bg-surface: #161B22;
-  --bg-elevated: #1C2333;
+  --bg-primary: #09090b;
+  --bg-secondary: #111114;
+  --bg-surface: #18181b;
+  --bg-elevated: #27272a;
 
-  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-hover: rgba(255, 255, 255, 0.07);
+  --glass-hover: rgba(255, 255, 255, 0.06);
 
-  --accent: #FF6B35;
-  --accent-glow: rgba(255, 107, 53, 0.3);
-  --accent-hover: #FF8255;
-  --accent-dim: rgba(255, 107, 53, 0.15);
+  --accent: #a855f7; /* Elite Purple */
+  --accent-glow: rgba(168, 85, 247, 0.4);
+  --accent-hover: #c084fc;
+  --accent-dim: rgba(168, 85, 247, 0.15);
 
-  --secondary: #7C3AED;
-  --secondary-glow: rgba(124, 58, 237, 0.3);
-  --secondary-dim: rgba(124, 58, 237, 0.15);
+  --secondary: #06b6d4; /* Pro Cyan */
+  --secondary-glow: rgba(6, 182, 212, 0.4);
+  --secondary-dim: rgba(6, 182, 212, 0.15);
+
+  --pro-primary: #a855f7;
+  --pro-secondary: #06b6d4;
+  --pro-glow: rgba(168, 85, 247, 0.5);
 
   --success: #10B981;
   --success-glow: rgba(16, 185, 129, 0.3);
   --success-dim: rgba(16, 185, 129, 0.15);
 
-  --danger: #EF4444;
+  --danger: #ef4444;
   --danger-glow: rgba(239, 68, 68, 0.3);
   --danger-dim: rgba(239, 68, 68, 0.15);
 
-  --warning: #F59E0B;
+  --warning: #f59e0b;
 
-  --text-primary: #E6EDF3;
-  --text-secondary: #8B949E;
-  --text-muted: #484F58;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
 
-  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  --font-primary: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 10px rgba(0,0,0,0.4);
+  --shadow-md: 0 10px 30px rgba(0,0,0,0.6);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 30px var(--accent-glow);
+  --shadow-glow: 0 0 20px var(--accent-glow);
 
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
