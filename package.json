@@ -1,7 +1,7 @@
 {
     "name": "dsdesk",
-    "version": "1.8.0",
-    "description": "DSDesk - Remote Desktop Application",
+    "version": "3.0.0",
+    "description": "DSDesk PRO - Remote Desktop Application",
     "main": "index.js",
     "scripts": {
         "start": "electron .",

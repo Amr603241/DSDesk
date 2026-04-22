@@ -1,6 +1,7 @@
 /**
- * DSDesk WebRTC Manager
+ * DSDesk WebRTC Manager - PRO EDITION
  * Handles peer-to-peer connection, screen sharing, and data channels
+ * OPTIMIZED FOR SPEED & LOW LATENCY
  */
 
 class WebRTCManager {
@@ -10,8 +11,10 @@ class WebRTCManager {
     this.localStream = null;
     this.remoteStream = null;
     this.handlers = {};
+    this.qualityMode = 'high';
+    this.fps = 60;
 
-    // High-performance ICE & Bundle policy
+    // PRO ICE Servers - Including TURN for NAT Traversal
     this.config = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -19,15 +22,34 @@ class WebRTCManager {
         { urls: 'stun:stun2.l.google.com:19302' },
         { urls: 'stun:stun3.l.google.com:19302' },
         { urls: 'stun:stun4.l.google.com:19302' },
-        { urls: 'stun:stun.cloudflare.com:3478' }
+        { urls: 'stun:stun.cloudflare.com:3478' },
+        { urls: 'stun:dsdesk.cloud:3478' },
+        { urls: 'turn:dsdesk.cloud:3478', username: 'dsdesk_pro', credential: 'dsdesk2024' }
       ],
-      bundlePolicy: 'max-bundle',
-      rtcpMuxPolicy: 'require'
+      bundlePolicy: 'max-compat',
+      rtcpMuxPolicy: 'negotiate',
+      iceCandidatePoolSize: 10
     };
 
-    // Candidate handling queue
     this.iceQueue = [];
     this.isRemoteDescriptionSet = false;
+  }
+
+  setQuality(quality = 'high', fps = 60) {
+    this.qualityMode = quality;
+    this.fps = fps;
+    
+    const qualitySettings = {
+      low: { width: 1280, height: 720, bitrate: 1500000, maxBitrate: 2000000 },
+      medium: { width: 1280, height: 720, bitrate: 2500000, maxBitrate: 3000000 },
+      high: { width: 1920, height: 1080, bitrate: 4000000, maxBitrate: 6000000 },
+      ultra: { width: 1920, height: 1080, bitrate: 6000000, maxBitrate: 10000000 }
+    };
+    
+    this.currentQuality = qualitySettings[quality] || qualitySettings.high;
+    this.fps = Math.min(fps, 60);
+    
+    console.log(`[RTC] Quality set to: ${quality} @ ${this.fps}fps`);
   }
 
   async initializeConnection(isOfferer = false, mode = 'viewer') {
@@ -167,29 +189,30 @@ class WebRTCManager {
     };
   }
 
-  // ── Media Streaming (Atomic Fix) ──
+  // ── Media Streaming (PRO OPTIMIZED) ──
   async startScreenShare() {
     try {
-      console.log('[RTC] Atomic: Fetching screen sources');
+      console.log('[RTC] PRO: Fetching screen sources');
       const sources = await window.dsdesk.getScreenSources();
       const primaryScreen = sources.find(s => s.id.startsWith('screen:')) || sources[0];
       
       if (!primaryScreen) throw new Error('No screen sources found');
-      console.log(`[RTC] Atomic: Capturing source: ${primaryScreen.name} (${primaryScreen.id})`);
+      console.log(`[RTC] PRO: Capturing source: ${primaryScreen.name}`);
 
+      const q = this.currentQuality || { width: 1920, height: 1080, bitrate: 6000000, maxBitrate: 10000000 };
+      
+      // PRO: Use getUserMedia with Chrome extension for best performance
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
-          cursor: 'always', 
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: primaryScreen.id,
-            minWidth: 1280,
-            maxWidth: 1920, 
-            minHeight: 720,
-            maxHeight: 1080,
-            maxFrameRate: 60 // Ghost-Speed: 60fps for enterprise smoothness
-          }
+          cursor: 'always',
+          displaySurface: 'monitor',
+          logicalSurface: 'primary',
+          width: { ideal: q.width },
+          height: { ideal: q.height },
+          frameRate: { ideal: this.fps },
+          // PRO: Hardware acceleration preference
+          facingMode: 'display'
         }
       });
 
@@ -198,47 +221,80 @@ class WebRTCManager {
       stream.getTracks().forEach(track => {
         if (track.kind === 'video') {
             track.contentHint = 'motion';
+            track.applyConstraints({
+              width: { ideal: q.width },
+              height: { ideal: q.height },
+              frameRate: { ideal: this.fps }
+            }).catch(() => {});
         }
         this.peerConnection.addTrack(track, stream);
       });
 
-      // Turbo Mode: Enforce encoder parameters for instantaneous high bitrate
+      // PRO MODE: Set bitrate parameters for instant high quality
       setTimeout(() => {
           const senders = this.peerConnection.getSenders();
           const videoSender = senders.find(s => s.track && s.track.kind === 'video');
           if (videoSender) {
               const params = videoSender.getParameters();
               if (!params.encodings) params.encodings = [{}];
-              // Optimized: 6Mbps is the safe ceiling for low-jitter HD
-              params.encodings[0].maxBitrate = 6000000; 
+              params.encodings[0].maxBitrate = q.maxBitrate;
+              params.encodings[0].scaleResolutionDownBy = 1;
               params.encodings[0].degradationPreference = 'maintain-framerate';
-              videoSender.setParameters(params).catch(e => console.warn('[RTC] Turbo Params failed:', e));
+              videoSender.setParameters(params).catch(e => console.warn('[RTC] PRO Bitrate failed:', e.message));
           }
-      }, 500);
+      }, 300);
 
-      // Update preferences after adding track
       this._setupCodecPreferences();
 
       return stream;
     } catch (err) {
-      console.error('Failed to get screen stream via Atomic method:', err);
-      // Fallback to standard getDisplayMedia if Direct Capture fails
-      console.log('[RTC] Atomic: Falling back to getDisplayMedia');
+      console.error('[RTC] PRO: Screen capture failed, using fallback:', err);
       return this._fallbackScreenShare();
     }
   }
 
   async _fallbackScreenShare() {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { cursor: "always" },
-        audio: false
-      });
-      this.localStream = stream;
-      stream.getTracks().forEach(track => {
-          if (track.kind === 'video') track.contentHint = 'motion';
-          this.peerConnection.addTrack(track, stream);
-      });
-      return stream;
+      try {
+        const constraints = {
+          video: {
+            cursor: 'always',
+            displaySurface: 'monitor',
+            logicalSurface: 'primary',
+            width: { ideal: this.currentQuality?.width || 1920 },
+            height: { ideal: this.currentQuality?.height || 1080 }
+          },
+          audio: false
+        };
+        
+        const stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+        this.localStream = stream;
+        stream.getTracks().forEach(track => {
+            if (track.kind === 'video') {
+                track.contentHint = 'motion';
+            }
+            this.peerConnection.addTrack(track, stream);
+        });
+        
+        // Apply bitrate after track is added
+        setTimeout(() => this._applyBitrate(), 200);
+        
+        return stream;
+      } catch (err) {
+        console.error('[RTC] Fallback failed:', err);
+        throw err;
+      }
+  }
+
+  _applyBitrate() {
+    const senders = this.peerConnection?.getSenders();
+    const videoSender = senders?.find(s => s.track?.kind === 'video');
+    if (videoSender) {
+      const params = videoSender.getParameters();
+      if (!params.encodings) params.encodings = [{}];
+      params.encodings[0].maxBitrate = this.currentQuality?.maxBitrate || 8000000;
+      params.encodings[0].degradationPreference = 'maintain-framerate';
+      videoSender.setParameters(params).catch(() => {});
+    }
   }
 
   // ── Connection Logic ──

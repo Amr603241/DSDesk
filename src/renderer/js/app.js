@@ -32,6 +32,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // ── PRO Settings State ──
+    let proSettings = {
+      quality: 'high',
+      fps: 60,
+      clipboard: true,
+      files: true,
+      cursor: true
+    };
+
     // ── 2. Diagnostic Logging ──
     const debugContent = document.getElementById('debug-content');
     const logDebug = (msg, level = 'info') => {
@@ -139,6 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.setConnectingOverlay(true, 'تجهيز الربط المباشر P2P...');
 
         try {
+            webrtc.setQuality(proSettings.quality, proSettings.fps);
             await webrtc.initializeConnection(true, 'viewer');
             const offer = await webrtc.createOffer();
             signaling.sendOffer(hostSocketId, offer);
@@ -153,6 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!state.isHost) return;
         state.currentRemoteSocketId = from;
         try {
+            webrtc.setQuality(proSettings.quality, proSettings.fps);
             await webrtc.initializeConnection(false, 'host');
             ui.setConnectingOverlay(true, 'بدء بث الشاشة...');
             await webrtc.startScreenShare();
@@ -191,6 +202,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (state.currentRemoteSocketId) {
             signaling.sendIceCandidate(state.currentRemoteSocketId, candidate);
         }
+    });
+    
+    // ── Quality/FPS Control from Settings ──
+    document.querySelectorAll('.quality-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            proSettings.quality = btn.dataset.quality;
+            if (webrtc) webrtc.setQuality(proSettings.quality, proSettings.fps);
+            logDebug(`Video quality: ${proSettings.quality}`);
+            ui.showToast(`جودة الفيديو: ${proSettings.quality}`, 'info');
+        };
+    });
+    
+    document.querySelectorAll('.fps-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.fps-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            proSettings.fps = parseInt(btn.dataset.fps);
+            if (webrtc) webrtc.setQuality(proSettings.quality, proSettings.fps);
+            logDebug(`FPS: ${proSettings.fps}`);
+            ui.showToast(`FPS: ${proSettings.fps}`, 'info');
+        };
     });
 
     webrtc.on('ice-state-change', (state) => {
@@ -536,6 +570,66 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd') {
             document.getElementById('debug-overlay')?.classList.toggle('hidden');
         }
+        
+        // Ctrl+Shift+C for Chat
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+            document.getElementById('chat-panel')?.classList.toggle('hidden');
+        }
+        
+        // Ctrl+Shift+T for Terminal
+        if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 't') {
+            document.getElementById('terminal-panel')?.classList.toggle('hidden');
+        }
+        
+        // F11 for Fullscreen
+        if (e.key === 'F11') {
+            document.getElementById('btn-fullscreen')?.click();
+        }
+        
+        // Ctrl+Alt+Del for Disconnect
+        if (e.ctrlKey && e.altKey && e.key === 'Delete') {
+            endSession();
+        }
+        
+        // ? for Help
+        if (e.key === '?' && ui.views.session.classList.contains('active')) {
+            document.getElementById('shortcuts-modal')?.classList.remove('hidden');
+        }
+    });
+    
+    // Settings Modal
+    document.getElementById('btn-settings')?.addEventListener('click', () => {
+        document.getElementById('settings-modal')?.classList.remove('hidden');
+    });
+    
+    document.getElementById('btn-close-settings')?.addEventListener('click', () => {
+        document.getElementById('settings-modal')?.classList.add('hidden');
+    });
+    
+    document.getElementById('btn-close-shortcuts')?.addEventListener('click', () => {
+        document.getElementById('shortcuts-modal')?.classList.add('hidden');
+    });
+    
+    document.getElementById('btn-shortcuts')?.addEventListener('click', () => {
+        document.getElementById('shortcuts-modal')?.classList.remove('hidden');
+    });
+    
+    // Quality Selector
+    document.querySelectorAll('.quality-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            logDebug(`Video quality set to: ${btn.dataset.quality}`);
+        };
+    });
+    
+    // FPS Selector
+    document.querySelectorAll('.fps-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.fps-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            logDebug(`FPS set to: ${btn.dataset.fps}`);
+        };
     });
 
     // Remote Input Forwarding - Professional Optimization v1.9.0

@@ -1,10 +1,11 @@
 /**
- * Input Handler - Windows API via koffi
+ * Input Handler - PRO EDITION
  * Simulates mouse and keyboard events on the host machine
+ * With drag/drop support and improved precision
  */
 
 let user32 = null;
-let SetCursorPos, mouse_event_fn, keybd_event_fn;
+let SetCursorPos, mouse_event_fn, keybd_event_fn, GetAsyncKeyState;
 
 try {
   const koffi = require('koffi');
@@ -13,23 +14,25 @@ try {
   SetCursorPos = user32.func('int __stdcall SetCursorPos(int X, int Y)');
   mouse_event_fn = user32.func('void __stdcall mouse_event(unsigned int dwFlags, unsigned int dx, unsigned int dy, unsigned int dwData, uintptr_t dwExtraInfo)');
   keybd_event_fn = user32.func('void __stdcall keybd_event(unsigned char bVk, unsigned char bScan, unsigned int dwFlags, uintptr_t dwExtraInfo)');
+  GetAsyncKeyState = user32.func('short __stdcall GetAsyncKeyState(int vKey)');
 
-  console.log('[✓] Windows API (user32.dll) loaded via koffi');
+  console.log('[✓] Windows API PRO loaded via koffi');
 } catch (e) {
   console.error('[✗] Failed to load koffi/user32.dll:', e.message);
   console.error('    Input simulation will be disabled.');
 }
 
-// ── Mouse event flags ──
+// ── Mouse event flags (PRO) ──
 const MOUSEEVENTF_MOVE        = 0x0001;
 const MOUSEEVENTF_LEFTDOWN    = 0x0002;
 const MOUSEEVENTF_LEFTUP      = 0x0004;
 const MOUSEEVENTF_RIGHTDOWN   = 0x0008;
-const MOUSEEVENTF_RIGHTUP     = 0x0010;
-const MOUSEEVENTF_MIDDLEDOWN  = 0x0020;
-const MOUSEEVENTF_MIDDLEUP    = 0x0040;
-const MOUSEEVENTF_WHEEL       = 0x0800;
-const MOUSEEVENTF_HWHEEL      = 0x1000;
+const MOUSEEVENTF_RIGHTUP   = 0x0010;
+const MOUSEEVENTF_MIDDLEDOWN = 0x0020;
+const MOUSEEVENTF_MIDDLEUP   = 0x0040;
+const MOUSEEVENTF_WHEEL      = 0x0800;
+const MOUSEEVENTF_ABSOLUTE  = 0x8000;
+const MOUSEEVENTF_WHEEL_HORIZONTAL = 0x1000;
 
 // ── Keyboard event flags ──
 const KEYEVENTF_KEYDOWN       = 0x0000;
@@ -68,18 +71,21 @@ const VK_MAP = {
 
 /**
  * Handle an input event from the remote client
- * @param {Object} data - Input event data
+ * PRO VERSION with better precision and drag support
  */
 function handleInput(data) {
   if (!user32) return;
 
+  const x = Math.round(data.x);
+  const y = Math.round(data.y);
+
   switch (data.type) {
     case 'mousemove':
-      SetCursorPos(Math.round(data.x), Math.round(data.y));
+      SetCursorPos(x, y);
       break;
 
     case 'mousedown':
-      SetCursorPos(Math.round(data.x), Math.round(data.y));
+      SetCursorPos(x, y);
       if (data.button === 0) mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
       else if (data.button === 2) mouse_event_fn(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
       else if (data.button === 1) mouse_event_fn(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 0);
@@ -91,18 +97,32 @@ function handleInput(data) {
       else if (data.button === 1) mouse_event_fn(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, 0);
       break;
 
+    case 'mousedrag': {
+      SetCursorPos(x, y);
+      mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+      break;
+    }
+
+    case 'mousedrop': {
+      SetCursorPos(x, y);
+      mouse_event_fn(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+      break;
+    }
+
     case 'dblclick':
-      SetCursorPos(Math.round(data.x), Math.round(data.y));
-      mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-      mouse_event_fn(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-      mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-      mouse_event_fn(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+      SetCursorPos(x, y);
+      mouse_event_fn(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+      mouse_event_fn(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
       break;
 
     case 'wheel':
-      // deltaY > 0 means scroll down, send negative value
-      const wheelDelta = data.deltaY > 0 ? -120 : 120;
+      const wheelDelta = Math.round(data.deltaY) * 120;
       mouse_event_fn(MOUSEEVENTF_WHEEL, 0, 0, wheelDelta, 0);
+      break;
+
+    case 'hwheel':
+      const hWheelDelta = Math.round(data.deltaX) * 120;
+      mouse_event_fn(MOUSEEVENTF_WHEEL_HORIZONTAL, 0, 0, hWheelDelta, 0);
       break;
 
     case 'keydown': {
@@ -122,6 +142,18 @@ function handleInput(data) {
       }
       break;
     }
+
+    case 'text':
+      if (data.text) {
+        for (const char of data.text) {
+          const vk = char.toUpperCase().charCodeAt(0);
+          if (vk >= 0x41 && vk <= 0x5A) {
+            keybd_event_fn(vk, 0, KEYEVENTF_KEYDOWN, 0);
+            keybd_event_fn(vk, 0, KEYEVENTF_KEYUP, 0);
+          }
+        }
+      }
+      break;
   }
 }
 
