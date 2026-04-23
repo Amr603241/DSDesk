@@ -1,46 +1,78 @@
-const { app, BrowserWindow, ipcMain, desktopCapturer, screen, session, clipboard, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, desktopCapturer, session, clipboard, shell, screen } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
-const Store = require('electron-store');
+const { spawn, exec } = require('child_process');
 const si = require('systeminformation');
-const { exec, spawn } = require('child_process');
+const Store = require('electron-store');
+
+// ── Steel Path Connection Fixes ──
+app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns');
+app.commandLine.appendSwitch('allow-loopback-in-peer-connection');
+app.commandLine.appendSwitch('enable-features', 'WebRTCPeerConnectionWithUrnUint');
 
 const store = new Store();
 
 let mainWindow;
-let inputHandler;
+let inputHandler = null;
 
-// ── Device ID (9-digit unique identifier like AnyDesk) ──
+// ── Load Input Handler ──
+const inputHandlerPath = path.join(__dirname, 'input-handler.js');
+
+try {
+  if (fs.existsSync(inputHandlerPath)) {
+    inputHandler = require(inputHandlerPath);
+  }
+  
+  if (inputHandler) {
+    console.log('[✓] Input handler bridge active');
+  } else {
+    console.error('[✗] Input handler not found');
+  }
+} catch (e) {
+  console.error('[✗] Input handler failed to load:', e.message);
+}
+
 // ── Device ID (9-digit unique identifier based on hardware) ──
 async function getDeviceId() {
+  const idArg = process.argv.find(arg => arg.startsWith('--device-id='));
+  if (idArg) {
+    const customId = idArg.split('=')[1];
+    console.log(`[!] Using Debug Device ID: ${customId}`);
+    return customId;
+  }
+
   let id = store.get('deviceId');
   if (!id) {
     try {
       const data = await si.uuid();
       const sys = await si.system();
-      // Prioritize hardware serial or OS UUID for a "Real ID"
       const hardwareBase = sys.serial || data.os || data.hardware || data.macs.join('') || Math.random().toString();
-      
       const hash = crypto.createHash('sha256').update(hardwareBase).digest('hex');
       const numericId = (parseInt(hash.substring(0, 8), 16) % 900000000) + 100000000;
       id = numericId.toString();
-      
       store.set('deviceId', id);
-      console.log(`[✓] Stable Hardware ID generated: ${id}`);
     } catch (e) {
       id = Math.floor(100000000 + Math.random() * 900000000).toString();
       store.set('deviceId', id);
     }
   }
+
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  if (isDev || process.argv.includes('--multi-instance')) {
+      const sessionTag = Math.floor(100 + Math.random() * 899).toString();
+      const instanceId = `${id}-${sessionTag}`;
+      console.log(`[!] DEVICE ID ISOLATION active: Using Session ID: ${instanceId}`);
+      return instanceId;
+  }
+
   return id;
 }
 
-// ── Random password generator ──
 function generatePassword() {
   return crypto.randomBytes(3).toString('hex').toUpperCase();
 }
 
-// ── Create main window ──
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 960,
@@ -61,24 +93,21 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-  // Show window when ready to prevent white flash
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
-
-  // Initialize input handler (Windows API via koffi)
-  try {
-    inputHandler = require('./input-handler');
-    console.log('[✓] Input handler loaded successfully');
-  } catch (e) {
-    console.error('[✗] Input handler failed to load:', e.message);
-  }
 }
 
 // ── IPC Handlers ──
-
-// Device info
 ipcMain.handle('get-device-id', () => getDeviceId());
+
+ipcMain.handle('is-admin', async () => {
+    return new Promise((resolve) => {
+        exec('net session', { stdio: 'ignore' }, (err) => {
+            resolve(!err);
+        });
+    });
+});
 
 ipcMain.handle('get-password', () => {
   let pwd = store.get('password');
@@ -101,10 +130,9 @@ ipcMain.handle('set-password-enabled', (event, enabled) => {
 });
 
 ipcMain.handle('get-password-enabled', () => {
-  return store.get('passwordEnabled') !== false; // Default to true
+  return store.get('passwordEnabled') !== false;
 });
 
-// Screen capture sources
 ipcMain.handle('get-screen-sources', async () => {
   try {
     const sources = await desktopCapturer.getSources({
@@ -122,7 +150,6 @@ ipcMain.handle('get-screen-sources', async () => {
   }
 });
 
-// Screen dimensions
 ipcMain.handle('get-screen-size', () => {
   const primaryDisplay = screen.getPrimaryDisplay();
   return {
@@ -132,18 +159,16 @@ ipcMain.handle('get-screen-size', () => {
   };
 });
 
-// Input simulation
 ipcMain.on('simulate-input', (event, data) => {
-  if (inputHandler) {
-    try {
-      inputHandler.handleInput(data);
-    } catch (e) {
-      console.error('Input simulation error:', e.message);
+    if (inputHandler) {
+        try {
+            inputHandler.handleInput(data);
+        } catch (e) {
+            console.error('[CRITICAL] Input simulation crashed:', e.message);
+        }
     }
-  }
 });
 
-// Clipboard handlers
 ipcMain.handle('clipboard-read', () => {
   return clipboard.readText();
 });
@@ -152,7 +177,6 @@ ipcMain.handle('clipboard-write', (event, text) => {
   if (text) clipboard.writeText(text);
 });
 
-// System stats handler (Advanced Pro Dashboard)
 ipcMain.handle('get-system-stats', async () => {
   try {
     const [load, mem, cpu, disk, os] = await Promise.all([
@@ -171,15 +195,13 @@ ipcMain.handle('get-system-stats', async () => {
       hostname: os.hostname
     };
   } catch (e) {
-    console.error('Failed to get system stats:', e);
     return { cpuLoad: 0, ramUsage: 0, hostname: 'Unknown' };
   }
 });
 
-// ── AnyDesk-Style Installation Logic ──
-
-const INSTALL_PATH = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'DSDesk');
-const EXE_NAME = 'DSDesk.exe';
+ipcMain.handle('sys-reboot', () => { exec('shutdown /r /t 0'); return true; });
+ipcMain.handle('sys-shutdown', () => { exec('shutdown /s /t 0'); return true; });
+ipcMain.handle('sys-lock', () => { exec('rundll32.exe user32.dll,LockWorkStation'); return true; });
 
 ipcMain.handle('get-install-status', () => {
     const currentPath = app.getPath('exe').toLowerCase();
@@ -187,42 +209,28 @@ ipcMain.handle('get-install-status', () => {
 });
 
 ipcMain.handle('perform-install', async () => {
+    const INSTALL_PATH = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'DSDesk');
+    const EXE_NAME = 'DSDesk.exe';
     try {
-        const sourceDir = path.dirname(app.getPath('exe'));
+        const currentExe = app.getPath('exe');
+        const sourceDir = path.dirname(currentExe);
         const targetExe = path.join(INSTALL_PATH, EXE_NAME);
-
-        // 1. Create Directory
-        if (!fs.existsSync(INSTALL_PATH)) {
-            fs.mkdirSync(INSTALL_PATH, { recursive: true });
-        }
-
-        // 2. Copy Files (EXE and resources)
+        if (!fs.existsSync(INSTALL_PATH)) fs.mkdirSync(INSTALL_PATH, { recursive: true });
         const files = fs.readdirSync(sourceDir);
         for (const file of files) {
             const src = path.join(sourceDir, file);
             const dest = path.join(INSTALL_PATH, file);
-            
             if (fs.lstatSync(src).isDirectory()) {
-                if (fs.cpSync) {
-                    fs.cpSync(src, dest, { recursive: true });
-                }
+                if (fs.cpSync) fs.cpSync(src, dest, { recursive: true });
             } else {
                 fs.copyFileSync(src, dest);
             }
         }
-
-        // 3. Register AutoRun (Registry)
-        const regCmd = `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "DSDesk" /t REG_SZ /d "\\"${targetExe}\\"" /f`;
-        exec(regCmd);
-
-        // 4. Create Desktop Shortcut (PowerShell)
+        exec(`reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "DSDesk" /t REG_SZ /d "\\"${targetExe}\\"" /f`);
         const desktopPath = path.join(process.env.USERPROFILE, 'Desktop', 'DSDesk.lnk');
-        const psCmd = `powershell "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('${desktopPath}');$s.TargetPath='${targetExe}';$s.WorkingDirectory='${INSTALL_PATH}';$s.Save()"`;
-        exec(psCmd);
-
+        exec(`powershell "$s=(New-Object -ComObject WScript.Shell).CreateShortcut('${desktopPath}');$s.TargetPath='${targetExe}';$s.WorkingDirectory='${INSTALL_PATH}';$s.Save()"`);
         return { success: true, path: targetExe };
     } catch (err) {
-        console.error('Installation failed:', err);
         return { success: false, error: err.message };
     }
 });
@@ -232,20 +240,6 @@ ipcMain.handle('launch-installed', (event, targetExe) => {
     app.quit();
 });
 
-// ── Remote Power Controls ──
-ipcMain.handle('sys-reboot', () => {
-  exec('shutdown /r /t 0');
-});
-
-ipcMain.handle('sys-shutdown', () => {
-  exec('shutdown /s /t 0');
-});
-
-ipcMain.handle('sys-lock', () => {
-  exec('rundll32.exe user32.dll,LockWorkStation');
-});
-
-// ── Process Manager (Task Manager) ──
 ipcMain.handle('get-process-list', () => {
   return new Promise((resolve, reject) => {
     exec('tasklist /FO CSV /NH', (err, stdout) => {
@@ -254,7 +248,7 @@ ipcMain.handle('get-process-list', () => {
       const processes = lines.map(line => {
         const parts = line.split('","').map(p => p.replace(/"/g, ''));
         return { name: parts[0], pid: parts[1], mem: parts[4] };
-      }).slice(0, 50); // Get top 50 for performance
+      }).slice(0, 50);
       resolve(processes);
     });
   });
@@ -269,34 +263,16 @@ ipcMain.handle('kill-process', (event, pid) => {
   });
 });
 
-// ── Basic Shell for Terminal ──
 let shellProcess = null;
-
 ipcMain.on('shell-start', (event) => {
   if (shellProcess) shellProcess.kill();
-  
   shellProcess = spawn('cmd.exe');
-  
-  shellProcess.stdout.on('data', (data) => {
-    event.sender.send('shell-data', data.toString());
-  });
-  
-  shellProcess.stderr.on('data', (data) => {
-    event.sender.send('shell-data', data.toString());
-  });
+  shellProcess.stdout.on('data', (data) => event.sender.send('shell-data', data.toString()));
+  shellProcess.stderr.on('data', (data) => event.sender.send('shell-data', data.toString()));
 });
+ipcMain.on('shell-input', (event, input) => { if (shellProcess) shellProcess.stdin.write(input); });
 
-ipcMain.on('shell-input', (event, input) => {
-  if (shellProcess) {
-    shellProcess.stdin.write(input);
-  }
-});
-
-// ── Trusted Devices ──
-ipcMain.handle('get-trusted-devices', () => {
-  return store.get('trustedDevices') || [];
-});
-
+ipcMain.handle('get-trusted-devices', () => store.get('trustedDevices') || []);
 ipcMain.handle('add-trusted-device', (event, deviceId) => {
   const trusted = store.get('trustedDevices') || [];
   if (!trusted.includes(deviceId)) {
@@ -305,7 +281,6 @@ ipcMain.handle('add-trusted-device', (event, deviceId) => {
   }
   return true;
 });
-
 ipcMain.handle('remove-trusted-device', (event, deviceId) => {
   let trusted = store.get('trustedDevices') || [];
   trusted = trusted.filter(id => id !== deviceId);
@@ -313,11 +288,26 @@ ipcMain.handle('remove-trusted-device', (event, deviceId) => {
   return true;
 });
 
-// ── Auto-Start Settings ──
-ipcMain.handle('get-autostart', () => {
-  return store.get('autostart') || false;
+ipcMain.on('window-minimize', () => { if (mainWindow) mainWindow.minimize(); });
+ipcMain.on('window-maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
+    else mainWindow.maximize();
+  }
+});
+ipcMain.on('window-close', () => { if (mainWindow) mainWindow.close(); });
+ipcMain.handle('is-maximized', () => mainWindow ? mainWindow.isMaximized() : false);
+
+// ── Extra Features from src/main/main.js ──
+ipcMain.handle('take-screenshot', async () => {
+  try {
+    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 1920, height: 1080 } });
+    if (sources.length > 0) return sources[0].thumbnail.toDataURL();
+    return null;
+  } catch (e) { return null; }
 });
 
+ipcMain.handle('get-autostart', () => store.get('autostart') || false);
 ipcMain.handle('set-autostart', (event, enabled) => {
   store.set('autostart', enabled);
   const exePath = app.getPath('exe');
@@ -328,98 +318,22 @@ ipcMain.handle('set-autostart', (event, enabled) => {
   return true;
 });
 
-// ── Settings Storage ──
-ipcMain.handle('get-settings', () => {
-  return store.get('settings') || {
-    quality: 'high',
-    fps: 60,
-    bitrate: 30,
-    cursor: true,
-    clipboard: true,
-    autostart: false
-  };
-});
-
+ipcMain.handle('get-settings', () => store.get('settings') || { quality: 'high', fps: 60, bitrate: 30, cursor: true, clipboard: true, autostart: false });
 ipcMain.handle('set-settings', (event, settings) => {
   store.set('settings', settings);
   return true;
 });
 
-// ── Screenshot Capture ──
-ipcMain.handle('take-screenshot', async () => {
-  try {
-    const sources = await desktopCapturer.getSources({
-      types: ['screen'],
-      thumbnailSize: { width: 1920, height: 1080 }
-    });
-    if (sources.length > 0) {
-      return sources[0].thumbnail.toDataURL();
-    }
-    return null;
-  } catch (e) {
-    console.error('Screenshot failed:', e);
-    return null;
-  }
-});
-
-// Window controls
-ipcMain.on('window-minimize', () => {
-  if (mainWindow) mainWindow.minimize();
-});
-
-ipcMain.on('window-maximize', () => {
-  if (mainWindow) {
-    if (mainWindow.isMaximized()) {
-      mainWindow.unmaximize();
-    } else {
-      mainWindow.maximize();
-    }
-  }
-});
-
-ipcMain.on('window-close', () => {
-  if (mainWindow) mainWindow.close();
-});
-
-ipcMain.handle('is-maximized', () => {
-  return mainWindow ? mainWindow.isMaximized() : false;
-});
-
-// ── Admin Check ──
-ipcMain.handle('is-admin', () => {
-  try {
-    const { execSync } = require('child_process');
-    execSync('net session', { stdio: 'ignore' });
-    return true;
-  } catch (e) {
-    return false;
-  }
-});
-
-// ── App lifecycle ──
 app.whenReady().then(() => {
-  // Handle getDisplayMedia requests from renderer
   session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
-    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
-      if (sources.length > 0) {
-        callback({ video: sources[0] });
-      } else {
-        callback({});
-      }
-    }).catch(() => {
-      callback({});
-    });
+    desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
+      const target = sources[0];
+      if (target) callback({ video: target });
+      else callback({});
+    }).catch(() => callback({}));
   });
-
   createWindow();
 });
 
-app.on('window-all-closed', () => {
-  app.quit();
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
+app.on('window-all-closed', () => app.quit());
+app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });

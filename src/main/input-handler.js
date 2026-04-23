@@ -1,11 +1,10 @@
 /**
- * Input Handler - PRO EDITION
+ * Input Handler - Windows API via koffi
  * Simulates mouse and keyboard events on the host machine
- * With drag/drop support and improved precision
  */
 
 let user32 = null;
-let SetCursorPos, mouse_event_fn, keybd_event_fn, GetAsyncKeyState;
+let SetCursorPos, mouse_event_fn, keybd_event_fn;
 
 try {
   const koffi = require('koffi');
@@ -14,25 +13,37 @@ try {
   SetCursorPos = user32.func('int __stdcall SetCursorPos(int X, int Y)');
   mouse_event_fn = user32.func('void __stdcall mouse_event(unsigned int dwFlags, unsigned int dx, unsigned int dy, unsigned int dwData, uintptr_t dwExtraInfo)');
   keybd_event_fn = user32.func('void __stdcall keybd_event(unsigned char bVk, unsigned char bScan, unsigned int dwFlags, uintptr_t dwExtraInfo)');
-  GetAsyncKeyState = user32.func('short __stdcall GetAsyncKeyState(int vKey)');
 
-  console.log('[✓] Windows API PRO loaded via koffi');
+  // High-precision Resolution Discovery
+  // SM_CXSCREEN = 0, SM_CYSCREEN = 1
+  const GetSystemMetrics = user32.func('int __stdcall GetSystemMetrics(int nIndex)');
+  user32.GetSystemMetrics = GetSystemMetrics; // Attach for easy access in handlers
+
+  // Enforce DPI awareness to ensure SetCursorPos works with physical pixels
+  try {
+    const SetProcessDPIAware = user32.func('int __stdcall SetProcessDPIAware()');
+    SetProcessDPIAware();
+  } catch (e) {
+    console.warn('SetProcessDPIAware not supported or already set');
+  }
+
+  console.log('[✓] Windows API (user32.dll) loaded with High DPI awareness');
 } catch (e) {
   console.error('[✗] Failed to load koffi/user32.dll:', e.message);
   console.error('    Input simulation will be disabled.');
 }
 
-// ── Mouse event flags (PRO) ──
+// ── Mouse event flags ──
 const MOUSEEVENTF_MOVE        = 0x0001;
 const MOUSEEVENTF_LEFTDOWN    = 0x0002;
 const MOUSEEVENTF_LEFTUP      = 0x0004;
 const MOUSEEVENTF_RIGHTDOWN   = 0x0008;
-const MOUSEEVENTF_RIGHTUP   = 0x0010;
-const MOUSEEVENTF_MIDDLEDOWN = 0x0020;
-const MOUSEEVENTF_MIDDLEUP   = 0x0040;
-const MOUSEEVENTF_WHEEL      = 0x0800;
-const MOUSEEVENTF_ABSOLUTE  = 0x8000;
-const MOUSEEVENTF_WHEEL_HORIZONTAL = 0x1000;
+const MOUSEEVENTF_RIGHTUP     = 0x0010;
+const MOUSEEVENTF_MIDDLEDOWN  = 0x0020;
+const MOUSEEVENTF_MIDDLEUP    = 0x0040;
+const MOUSEEVENTF_WHEEL       = 0x0800;
+const MOUSEEVENTF_HWHEEL      = 0x1000;
+const MOUSEEVENTF_ABSOLUTE    = 0x8000;
 
 // ── Keyboard event flags ──
 const KEYEVENTF_KEYDOWN       = 0x0000;
@@ -69,23 +80,46 @@ const VK_MAP = {
   'BracketRight': 0xDD, 'Quote': 0xDE
 };
 
+// ── Performance Cache ──
+let screenMetrics = { width: 0, height: 0, lastCheck: 0 };
+function getCachedMetrics() {
+  const now = Date.now();
+  if (now - screenMetrics.lastCheck > 5000) { // Update every 5 seconds
+    screenMetrics.width = user32.GetSystemMetrics(0);
+    screenMetrics.height = user32.GetSystemMetrics(1);
+    screenMetrics.lastCheck = now;
+  }
+  return screenMetrics;
+}
+
 /**
  * Handle an input event from the remote client
- * PRO VERSION with better precision and drag support
+ * @param {Object} data - Input event data
  */
 function handleInput(data) {
-  if (!user32) return;
+  if (!user32 || !data) return;
 
-  const x = Math.round(data.x);
-  const y = Math.round(data.y);
+  // Validation: Ensure coordinates are valid numbers to prevent native crashes
+  const x = Number.isFinite(data.x) ? Math.round(data.x) : null;
+  const y = Number.isFinite(data.y) ? Math.round(data.y) : null;
+  const metrics = getCachedMetrics();
 
   switch (data.type) {
     case 'mousemove':
-      SetCursorPos(x, y);
+      if (x !== null && y !== null) {
+        // Industry Standard: Map 0-65535 to physical pixels
+        const absX = Math.floor((x * 65535) / (metrics.width - 1 || 1));
+        const absY = Math.floor((y * 65535) / (metrics.height - 1 || 1));
+        mouse_event_fn(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, absX, absY, 0, 0);
+      }
       break;
 
     case 'mousedown':
-      SetCursorPos(x, y);
+      if (x !== null && y !== null) {
+        const absX = Math.round((x * 65535) / (metrics.width || 1));
+        const absY = Math.round((y * 65535) / (metrics.height || 1));
+        mouse_event_fn(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, absX, absY, 0, 0);
+      }
       if (data.button === 0) mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
       else if (data.button === 2) mouse_event_fn(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0);
       else if (data.button === 1) mouse_event_fn(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, 0);
@@ -97,32 +131,36 @@ function handleInput(data) {
       else if (data.button === 1) mouse_event_fn(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, 0);
       break;
 
-    case 'mousedrag': {
-      SetCursorPos(x, y);
-      mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-      break;
-    }
-
-    case 'mousedrop': {
-      SetCursorPos(x, y);
-      mouse_event_fn(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-      break;
-    }
-
     case 'dblclick':
-      SetCursorPos(x, y);
-      mouse_event_fn(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-      mouse_event_fn(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+      if (x !== null && y !== null) {
+        const absX = Math.round((x * 65535) / (metrics.width || 1));
+        const absY = Math.round((y * 65535) / (metrics.height || 1));
+        mouse_event_fn(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE, absX, absY, 0, 0);
+      }
+      mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+      mouse_event_fn(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+      mouse_event_fn(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+      mouse_event_fn(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
       break;
 
     case 'wheel':
-      const wheelDelta = Math.round(data.deltaY) * 120;
+      // deltaY > 0 means scroll down, send negative value
+      const wheelDelta = data.deltaY > 0 ? -120 : 120;
       mouse_event_fn(MOUSEEVENTF_WHEEL, 0, 0, wheelDelta, 0);
       break;
 
-    case 'hwheel':
-      const hWheelDelta = Math.round(data.deltaX) * 120;
-      mouse_event_fn(MOUSEEVENTF_WHEEL_HORIZONTAL, 0, 0, hWheelDelta, 0);
+    case 'shortcut':
+      // Professional Power Tools v1.9.0
+      const { exec } = require('child_process');
+      if (data.action === 'task-mgr') {
+        exec('taskmgr.exe');
+      } else if (data.action === 'lock') {
+        exec('rundll32.exe user32.dll,LockWorkStation');
+      } else if (data.action === 'reboot') {
+        exec('shutdown /r /t 0');
+      } else if (data.action === 'shutdown') {
+        exec('shutdown /s /t 0');
+      }
       break;
 
     case 'keydown': {
@@ -142,18 +180,6 @@ function handleInput(data) {
       }
       break;
     }
-
-    case 'text':
-      if (data.text) {
-        for (const char of data.text) {
-          const vk = char.toUpperCase().charCodeAt(0);
-          if (vk >= 0x41 && vk <= 0x5A) {
-            keybd_event_fn(vk, 0, KEYEVENTF_KEYDOWN, 0);
-            keybd_event_fn(vk, 0, KEYEVENTF_KEYUP, 0);
-          }
-        }
-      }
-      break;
   }
 }
 

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('dsdesk', {
   getPasswordEnabled: () => ipcRenderer.invoke('get-password-enabled'),
   setPasswordEnabled: (enabled) => ipcRenderer.invoke('set-password-enabled', enabled),
   getSystemStats: () => ipcRenderer.invoke('get-system-stats'),
+  isAdmin: () => ipcRenderer.invoke('is-admin'),
 
   // ── Remote Controls ──
   reboot: () => ipcRenderer.invoke('sys-reboot'),
@@ -29,7 +30,6 @@ contextBridge.exposeInMainWorld('dsdesk', {
   writeClipboard: (text) => ipcRenderer.invoke('clipboard-write', text),
 
   // ── System Monitoring ──
-  getSystemStats: () => ipcRenderer.invoke('get-system-stats'),
   getProcessList: () => ipcRenderer.invoke('get-process-list'),
   killProcess: (pid) => ipcRenderer.invoke('kill-process', pid),
 
@@ -50,9 +50,6 @@ contextBridge.exposeInMainWorld('dsdesk', {
   // ── Settings ──
   getSettings: () => ipcRenderer.invoke('get-settings'),
   setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
-
-  // ── Admin Check ──
-  isAdmin: () => ipcRenderer.invoke('is-admin'),
 
   // ── Input Simulation ──
   simulateInput: (data) => ipcRenderer.send('simulate-input', data),

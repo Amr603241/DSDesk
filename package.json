@@ -2,7 +2,7 @@
     "name": "dsdesk",
     "version": "4.0.0",
     "description": "DSDesk PRO MAX - Next-Gen AI-Powered Remote Desktop with Enterprise Features",
-    "main": "index.js",
+    "main": "src/main/main.js",
     "scripts": {
         "start": "electron .",
         "server": "node server/signaling-server.js",
@@ -35,12 +35,10 @@
         "asar": true,
         "compression": "maximum",
         "files": [
-            "src/renderer/**/*",
-            "index.js",
-            "preload.js",
-            "input-handler.js",
+            "src/**/*",
             "package.json",
-            "server/**/*"
+            "server/**/*",
+            "sign-dummy.js"
         ],
         "win": {
             "target": "portable",
