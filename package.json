@@ -31,7 +31,7 @@
     },
     "build": {
         "appId": "com.dsdesk.app",
-        "productName": "DSDesk",
+        "productName": "DSDesk PRO MAX",
         "asar": true,
         "compression": "maximum",
         "files": [
@@ -43,9 +43,19 @@
             "server/**/*"
         ],
         "win": {
-            "target": "portable",
-            "artifactName": "DSDesk.exe",
-            "sign": "sign-dummy.js"
+            "target": ["portable", "nsis"],
+            "sign": "sign-dummy.js",
+            "icon": "app_icon.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "DSDesk PRO MAX"
+        },
+        "portable": {
+            "artifactName": "DSDesk_PRO_MAX_Portable.exe"
         }
     }
 }
