@@ -8,6 +8,7 @@ class UIManager {
       home: document.getElementById('view-home'),
       files: document.getElementById('view-files'),
       terminal: document.getElementById('view-terminal'),
+      settings: document.getElementById('view-settings'),
       session: document.getElementById('view-session')
     };
 
@@ -64,6 +65,7 @@ class UIManager {
   }
 
   addTerminalLine(text, isCommand = false) {
+    if (!this.elements.terminalOutput) return;
     const div = document.createElement('div');
     div.className = isCommand ? 'terminal-cmd' : 'terminal-res';
     div.textContent = isCommand ? `$ ${text}` : text;
@@ -101,25 +103,33 @@ class UIManager {
           view.style.display = v === viewName ? 'flex' : 'none';
       }
     });
+    // Update sidebar state
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-view') === viewName);
+    });
   }
 
   switchInternalView(viewName) {
       this.switchView(viewName);
-      // Update sidebar state
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-          btn.classList.toggle('active', btn.getAttribute('data-view') === viewName);
-      });
   }
 
   updateDeviceInfo(id, password) {
     if (password) window.dsdesk_current_password = password;
-    if (id) this.elements.deviceId.textContent = id.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    this.elements.devicePassword.textContent = '••••••';
+    if (id && this.elements.deviceId) {
+        this.elements.deviceId.textContent = id.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+    if (this.elements.devicePassword) {
+        this.elements.devicePassword.textContent = '••••••';
+    }
   }
 
   setConnectionStatus(connected) {
-    this.elements.globalStatusDot.className = connected ? 'status-dot status-online' : 'status-dot status-offline';
-    this.elements.globalStatusText.textContent = connected ? 'ONLINE' : 'OFFLINE';
+    if (this.elements.globalStatusDot) {
+        this.elements.globalStatusDot.className = connected ? 'status-dot status-online' : 'status-dot status-offline';
+    }
+    if (this.elements.globalStatusText) {
+        this.elements.globalStatusText.textContent = connected ? 'ONLINE' : 'OFFLINE';
+    }
   }
 
   updateStats(stats) {
@@ -147,6 +157,7 @@ class UIManager {
   }
 
   renderRecentList(list, nicknames, onConnect) {
+    if (!this.elements.recentList) return;
     this.elements.recentList.innerHTML = '';
     if (list.length === 0) {
       this.elements.recentList.innerHTML = '<div class="empty-state">لا توجد اتصالات حديثة</div>';
@@ -163,12 +174,12 @@ class UIManager {
   }
 
   showRequestModal(fromId) {
-    this.elements.requestFromId.textContent = fromId;
-    this.elements.modalRequest.classList.add('active');
+    if (this.elements.requestFromId) this.elements.requestFromId.textContent = fromId;
+    if (this.elements.modalRequest) this.elements.modalRequest.classList.add('active');
   }
 
   hideRequestModal() {
-    this.elements.modalRequest.classList.remove('active');
+    if (this.elements.modalRequest) this.elements.modalRequest.classList.remove('active');
   }
 }
 

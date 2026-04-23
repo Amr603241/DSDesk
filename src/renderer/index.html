@@ -26,7 +26,7 @@
       </nav>
     </div>
     <div class="sidebar-bottom">
-      <button class="nav-btn" id="btn-settings-side"><i class="fas fa-cog"></i><span>الإعدادات</span></button>
+      <button class="nav-btn" data-view="settings"><i class="fas fa-cog"></i><span>الإعدادات</span></button>
       <div class="user-status">
         <span class="status-dot status-offline" id="global-status-dot"></span>
         <span id="global-status-text">OFFLINE</span>
@@ -88,6 +88,35 @@
         </div>
       </section>
 
+      <!-- VIEW: SETTINGS -->
+      <section class="view" id="view-settings">
+        <div class="settings-container glass-card" style="height: 100%; padding: 40px;">
+          <h2>إعدادات النظام</h2>
+          <div class="settings-grid" style="display: flex; flex-direction: column; gap: 24px; margin-top: 32px;">
+            <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 700;">التشغيل التلقائي</div>
+                <div class="text-dim" style="font-size: 12px;">بدء تشغيل البرنامج مع الويندوز</div>
+              </div>
+              <input type="checkbox" id="setting-autostart">
+            </div>
+            <div class="setting-item" style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 700;">جودة الفيديو</div>
+                <div class="text-dim" style="font-size: 12px;">اختر جودة البث (تؤثر على سرعة الاستجابة)</div>
+              </div>
+              <select id="setting-quality" style="background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border); padding: 8px; border-radius: 6px;">
+                <option value="ultra">Ultra (4K/60fps)</option>
+                <option value="high">High (1080p/60fps)</option>
+                <option value="fast" selected>Fast (720p/60fps)</option>
+                <option value="balanced">Balanced (720p/30fps)</option>
+              </select>
+            </div>
+            <button id="btn-save-settings" class="btn-turbo" style="width: fit-content; align-self: flex-end; margin-top: 20px;">حفظ الإعدادات</button>
+          </div>
+        </div>
+      </section>
+
       <!-- VIEW: FILES -->
       <section class="view" id="view-files">
         <div class="file-manager glass-card" style="height: 100%; border-radius: 12px; overflow: hidden; padding: 0;">
@@ -106,9 +135,9 @@
       <section class="view" id="view-terminal">
         <div class="terminal-container glass-card" style="height: 100%; background: #000; padding: 20px;">
           <div id="terminal-output" style="flex: 1; overflow-y: auto;"></div>
-          <div class="terminal-input-row">
+          <div class="terminal-input-row" style="display: flex; gap: 10px; margin-top: 10px;">
             <span style="color: #00ff00;">$</span>
-            <input type="text" id="terminal-input" placeholder="اكتب أمراً هنا...">
+            <input type="text" id="terminal-input" placeholder="اكتب أمراً هنا..." style="flex: 1; background: transparent; border: none; color: white; outline: none;">
           </div>
         </div>
       </section>
@@ -162,7 +191,6 @@
   <!-- Scripts -->
   <script src="js/socket.io.min.js"></script>
   <script src="js/ui.js"></script>
-
   <script src="js/signaling.js"></script>
   <script src="js/webrtc.js"></script>
   <script src="js/app.js"></script>
