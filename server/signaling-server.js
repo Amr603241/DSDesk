@@ -163,8 +163,14 @@ io.on('connection', (socket) => {
   // ── Disconnect ──
   socket.on('disconnect', () => {
     if (socket.deviceId) {
-      devices.delete(socket.deviceId);
-      console.log(`[-] Device unregistered: ${socket.deviceId}`);
+      const currentDevice = devices.get(socket.deviceId);
+      // Only delete if this is the active socket for the device
+      if (currentDevice && currentDevice.socketId === socket.id) {
+        devices.delete(socket.deviceId);
+        console.log(`[-] Device unregistered: ${socket.deviceId}`);
+      } else {
+        console.log(`[!] Stale socket disconnected for: ${socket.deviceId} (New session already active)`);
+      }
     }
     console.log(`[-] Client disconnected: ${socket.id}`);
   });

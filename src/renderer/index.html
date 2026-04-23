@@ -87,33 +87,45 @@
          <button id="btn-close-banner" class="btn-icon">×</button>
       </div>
 
-      <div class="home-content">
-        <!-- Hero Section -->
-        <div class="hero-section">
-          <h1 class="hero-title">
-            <span class="gradient-text">تحكم عن بعد</span>
-            <span class="hero-subtitle">آمن وسريع</span>
-          </h1>
-        </div>
-
-        <!-- Cards Grid -->
-        <div class="home-grid">
-          <!-- ── This Device Card ── -->
-          <div class="card glass card-device" id="card-device">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="card-icon-wrap device-icon-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-                </svg>
+<div class="home-content">
+        <!-- Modern Dashboard -->
+        <div class="dashboard-container">
+          <!-- Connection Panel -->
+          <div class="connection-panel">
+            <div class="panel-header">
+              <h1 class="gradient-text">DSDesk PRO MAX</h1>
+              <p class="subtitle">اتصال آمن وسريع عن بُعد</p>
+            </div>
+            
+            <!-- Quick Connect -->
+            <div class="quick-connect">
+              <div class="input-wrapper modern">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                <input type="text" id="remote-id" class="form-control" placeholder="أدخل معرّف الجهاز أو الرابط" maxlength="13" autocomplete="off">
               </div>
-              <div class="card-title-group">
-                <h2 id="device-hostname">جاري التحميل...</h2>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <p class="card-desc" id="device-os-info" style="margin:0;">معلومات جهازك للاتصال</p>
-                    <button id="btn-copy-id-top" class="btn-icon-sm" title="نسخ الهوية" style="padding:2px; opacity:0.6; cursor:pointer; background:none; border:1px solid #333; border-radius:4px; color:#fff;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-                    </button>
+              <button type="submit" id="btn-connect" class="btn-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                <span>اتصال</span>
+              </button>
+            </div>
+            
+            <!-- Generate Link -->
+            <button class="btn-secondary full-width" id="btn-generate-link">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+              <span>إنشاء رابط آمن</span>
+            </button>
+          </div>
+          
+          <!-- Device Info Card -->
+          <div class="device-card card glass">
+            <div class="card-header">
+              <div class="device-info">
+                <div class="device-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <div>
+                  <h2 id="device-hostname">جاري التحميل...</h2>
+                  <p class="card-desc" id="device-os-info" style="margin:0;">معلومات جهازك</p>
                 </div>
               </div>
               <div class="status-badge" id="status-badge">
@@ -121,107 +133,48 @@
                 <span class="status-text" id="status-text">غير متصل</span>
               </div>
             </div>
-
             <div class="card-body">
               <div class="info-group">
                 <label>معرّف الجهاز (ID)</label>
                 <div class="id-display" id="id-display">
                   <span class="id-text" id="device-id">--- --- ---</span>
-                  <button id="btn-copy-id" class="btn-icon tooltip" data-tooltip="نسخ المعرّف">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                    </svg>
+                  <button id="btn-copy-id" class="btn-icon tooltip" data-tooltip="نسخ">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                   </button>
                 </div>
               </div>
-
               <div class="info-group">
-                <div class="password-label-row">
-                  <label>كلمة المرور</label>
-                  <label class="switch-container">
-                    <input type="checkbox" id="check-password-enabled" checked>
-                    <span class="switch-slider"></span>
-                    <span class="switch-text">تفعيل الحماية</span>
-                  </label>
-                </div>
+                <label>كلمة المرور</label>
                 <div class="password-display">
                   <span class="password-text" id="device-password">••••••</span>
                   <div class="password-actions">
-                    <button id="btn-toggle-pwd" class="btn-icon tooltip" data-tooltip="إظهار/إخفاء">
-                      <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                      </svg>
-                      <svg class="icon-eye-off hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
-                      </svg>
+                    <button id="btn-toggle-pwd" class="btn-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
-                    <button id="btn-refresh-pwd" class="btn-icon tooltip" data-tooltip="تحديث كلمة المرور">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-                      </svg>
+                    <button id="btn-refresh-pwd" class="btn-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
                     </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <!-- ── Connect Card ── -->
-          <div class="card glass card-connect" id="card-connect">
-            <div class="card-glow"></div>
-            <div class="card-header">
-              <div class="card-icon-wrap connect-icon-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-                </svg>
-              </div>
-              <div class="card-title-group">
-                <h2>اتصال عن بُعد</h2>
-                <p class="card-desc">اتصل بجهاز آخر عبر المعرّف</p>
-              </div>
+          
+          <!-- Recent Devices -->
+          <div class="recent-card card glass">
+            <div class="card-header compact">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <h3>الأجهزة الأخيرة</h3>
             </div>
-
-            <div class="card-body">
-              <form id="connect-form" class="connect-form" autocomplete="off">
-                <div class="input-group">
-                  <label for="remote-id">معرّف الجهاز البعيد</label>
-                  <div class="input-wrapper">
-                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-                    </svg>
-                    <input type="text" id="remote-id" class="form-control" placeholder="000 000 000-000" maxlength="13" autocomplete="off" spellcheck="false">
-                  </div>
-                </div>
-
-                <div class="input-group hidden" id="group-remote-password">
-                  <label for="remote-password">كلمة المرور المطلوبة</label>
-                  <div class="input-wrapper">
-                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-                    </svg>
-                    <input type="password" id="remote-password" placeholder="أدخل كلمة المرور" autocomplete="off">
-                  </div>
-                </div>
-
-                <button type="submit" id="btn-connect" class="btn-primary" disabled>
-                  <span class="btn-content" id="btn-connect-content">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-                    </svg>
-                    <span>اتصال</span>
-                  </span>
-                  <span class="btn-loader hidden" id="btn-connect-loader">
-                    <div class="spinner-small"></div>
-                    <span>جاري الاتصال...</span>
-                  </span>
-                </button>
-              </form>
+            <div class="recent-list" id="recent-list">
+              <div class="empty-state">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/></svg>
+                <p>لا توجد اتصالات سابقة</p>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- Server Settings Card (Hidden in Production) -->
-        <div class="card glass server-settings-card hidden" id="server-settings-card">
+      </div>
           <div class="card-header compact">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6" y2="6"/><line x1="6" y1="18" x2="6" y2="18"/>

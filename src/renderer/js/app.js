@@ -17,11 +17,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ui = new UIManager();
     
     // Try local server first (faster), fall back to cloud
-    let serverUrl = localStorage.getItem('dsdesk_server') || SERVER_CONFIG.primary;
-    const signaling = new SignalingClient(serverUrl);
-    const webrtc = new WebRTCManager();
+    let savedServer = localStorage.getItem('dsdesk_server');
+    let serverUrl = savedServer || SERVER_CONFIG.primary;
     
-    console.log('[DSDesk] Starting... Server:', serverUrl);
+    let webrtc;
+    try {
+        webrtc = new WebRTCManager();
+    } catch (e) {
+        console.error('[CRITICAL] WebRTCManager failed to initialize:', e);
+        // Fallback to dummy if needed or just log
+    }
+    
+    const signaling = new SignalingClient(serverUrl);
+    
+    console.log('[DSDesk] Starting... Default Server:', serverUrl);
 
     let state = {
         deviceId: '',
@@ -95,14 +104,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.showToast('جاري الاتصال...', 'info');
         
         let connected = false;
+        // Priority: Saved working server -> Local -> Cloud
         const servers = [
-            SERVER_CONFIG.primary,  // localhost
-            SERVER_CONFIG.cloud   // cloud fallback
-        ];
+            savedServer,
+            SERVER_CONFIG.primary,
+            SERVER_CONFIG.cloud
+        ].filter(Boolean); // Remove null/undefined
         
-        for (let i = 0; i < servers.length && !connected; i++) {
-            const url = servers[i];
-            ui.showToast(`جاري尝试: ${url.replace('https://', '').replace('http://', '')}...`, 'info');
+        // Remove duplicates while preserving order
+        const uniqueServers = [...new Set(servers)];
+        
+        for (let i = 0; i < uniqueServers.length && !connected; i++) {
+            const url = uniqueServers[i];
+            ui.showToast(`جاري الاتصال: ${url.replace('https://', '').replace('http://', '')}...`, 'info');
             signaling.serverUrl = url;
             
             try {
@@ -112,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ui.setConnectionStatus(true, 'متصل');
                 console.log('[✓] Connected to:', url);
             } catch (err) {
-                console.warn('[!] Failed:', url, err.message);
+                console.warn('[!] Failed to connect to:', url, err.message);
             }
         }
 

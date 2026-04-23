@@ -40,7 +40,7 @@ connect() {
         reconnectionDelay: 2000,
         reconnectionDelayMax: 8000,
         timeout: 15000,
-        transports: ['polling', 'websocket'],
+        transports: ['websocket', 'polling'],
         forceNew: true
       });
 
