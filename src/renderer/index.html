@@ -12,7 +12,7 @@
 </head>
 <body>
 
-  <!-- ═══════════════ Sidebar ═══════════════ -->
+  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-top">
       <div class="brand">
@@ -34,7 +34,7 @@
     </div>
   </aside>
 
-  <!-- ═══════════════ Workspace ═══════════════ -->
+  <!-- Workspace -->
   <main class="workspace">
     <header class="header">
       <div class="header-search">
@@ -50,16 +50,15 @@
     </header>
 
     <div class="content-area">
-      
       <!-- VIEW: HOME -->
       <section class="view active" id="view-home">
         <div class="welcome-banner">
-          <h1>مرحباً بك، <span class="gradient-text" id="user-display-name">Host</span></h1>
-          <p>استخدم الـ ID أدناه لمشاركة شاشتك أو أدخل ID في الأعلى للتحكم.</p>
+          <h1>مرحباً بك في <span class="gradient-text">DSDesk Pro Max</span></h1>
+          <p>استخدم المعرّف (ID) الخاص بك لمشاركة شاشتك.</p>
         </div>
         <div class="grid-layout">
           <div class="glass-card identity-card">
-            <div class="card-label">معرّف الجهاز الخاص بك</div>
+            <div class="card-label">معرّف جهازك</div>
             <div class="id-value-large" id="device-id">--- --- ---</div>
             <div class="pwd-section">
               <span class="text-dim">كلمة المرور:</span>
@@ -72,7 +71,7 @@
             <button id="btn-copy-id" class="btn-outline-primary"><i class="far fa-copy"></i> نسخ المعرّف</button>
           </div>
           <div class="glass-card stats-card">
-            <div class="card-label">أداء النظام المحلي</div>
+            <div class="card-label">الأداء المحلي</div>
             <div class="stat-row">
               <div class="stat-info"><span>CPU</span> <span id="dash-cpu-text">0%</span></div>
               <div class="progress-bg"><div id="dash-cpu-bar" class="progress-fill primary"></div></div>
@@ -83,7 +82,7 @@
             </div>
           </div>
           <div class="glass-card recent-connections" style="grid-column: span 2;">
-            <div class="card-label">الاتصالات الأخيرة</div>
+            <div class="card-label">الاتصالات الحديثة</div>
             <div id="recent-list" class="recent-grid"></div>
           </div>
         </div>
@@ -91,27 +90,25 @@
 
       <!-- VIEW: FILES -->
       <section class="view" id="view-files">
-        <div class="file-manager glass-card" style="height: 100%; gap: 0; padding: 0;">
+        <div class="file-manager glass-card" style="height: 100%; border-radius: 12px; overflow: hidden; padding: 0;">
           <div class="fm-header">
-            <div class="pane-title">جهازي (Local)</div>
-            <div class="pane-title">الجهاز البعيد (Remote)</div>
+            <div class="pane-title">Local Machine</div>
+            <div class="pane-title">Remote Machine</div>
           </div>
           <div class="fm-body">
             <div class="fm-pane" id="local-files"></div>
-            <div class="fm-pane" id="remote-files">
-              <div class="empty-state">يجب الاتصال بجهاز لعرض الملفات</div>
-            </div>
+            <div class="fm-pane" id="remote-files"><div class="empty-state">انتظر الاتصال بجهاز...</div></div>
           </div>
         </div>
       </section>
 
       <!-- VIEW: TERMINAL -->
       <section class="view" id="view-terminal">
-        <div class="terminal-container glass-card" style="height: 100%; background: #000; font-family: 'JetBrains Mono'; padding: 20px;">
-          <div id="terminal-output" style="flex: 1; overflow-y: auto; color: #00ff00; font-size: 13px;"></div>
-          <div class="terminal-input-row" style="display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+        <div class="terminal-container glass-card" style="height: 100%; background: #000; padding: 20px;">
+          <div id="terminal-output" style="flex: 1; overflow-y: auto;"></div>
+          <div class="terminal-input-row">
             <span style="color: #00ff00;">$</span>
-            <input type="text" id="terminal-input" style="flex: 1; background: transparent; border: none; color: #fff; outline: none;" placeholder="أدخل أمراً...">
+            <input type="text" id="terminal-input" placeholder="اكتب أمراً هنا...">
           </div>
         </div>
       </section>
@@ -121,8 +118,8 @@
         <div class="remote-viewport">
           <video id="remote-video" autoplay muted playsinline></video>
           <div class="floating-toolbar">
-            <button class="tool-btn" onclick="ui.switchInternalView('files')"><i class="fas fa-folder-open"></i></button>
-            <button class="tool-btn" onclick="ui.switchInternalView('terminal')"><i class="fas fa-terminal"></i></button>
+            <button class="tool-btn" id="btn-files-shortcut"><i class="fas fa-folder-open"></i></button>
+            <button class="tool-btn" id="btn-terminal-shortcut"><i class="fas fa-terminal"></i></button>
             <button class="tool-btn" id="btn-chat-toggle"><i class="fas fa-comments"></i></button>
             <div class="tool-sep"></div>
             <button class="tool-btn disconnect" id="btn-disconnect"><i class="fas fa-power-off"></i></button>
@@ -133,7 +130,6 @@
           </div>
         </div>
       </section>
-
     </div>
   </main>
 
@@ -141,16 +137,15 @@
   <div class="modal-overlay" id="modal-request">
     <div class="modal glass">
       <div class="icon-circle"><i class="fas fa-user-shield"></i></div>
-      <h3>طلب تحكم وارد</h3>
-      <p>الجهاز <strong id="request-from-id">---</strong> يرغب في التحكم بجهازك.</p>
+      <h3>طلب اتصال وارد</h3>
+      <p>الجهاز <strong id="request-from-id">---</strong> يطلب التحكم بجهازك.</p>
       <div class="modal-actions">
-        <button id="btn-accept" class="btn-primary">موافقة (Accept)</button>
-        <button id="btn-reject" class="btn-secondary">رفض (Decline)</button>
+        <button id="btn-accept" class="btn-primary">قبول الطلب</button>
+        <button id="btn-reject" class="btn-secondary">رفض</button>
       </div>
     </div>
   </div>
 
-  <!-- Chat Panel (Slide-in) -->
   <div class="chat-overlay" id="chat-panel">
     <div class="chat-box glass">
       <div class="chat-header">محادثة الجلسة <button onclick="document.getElementById('chat-panel').classList.remove('active')"><i class="fas fa-times"></i></button></div>
@@ -164,6 +159,8 @@
 
   <div id="toast-container"></div>
 
+  <!-- Scripts -->
+  <script src="../../node_modules/socket.io-client/dist/socket.io.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/signaling.js"></script>
   <script src="js/webrtc.js"></script>
