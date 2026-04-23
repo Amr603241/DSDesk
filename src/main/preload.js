@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('dsdesk', {
   // ── Screen Capture ──
   getScreenSources: () => ipcRenderer.invoke('get-screen-sources'),
   getScreenSize: () => ipcRenderer.invoke('get-screen-size'),
+  takeScreenshot: () => ipcRenderer.invoke('take-screenshot'),
 
   // ── Clipboard ──
   readClipboard: () => ipcRenderer.invoke('clipboard-read'),
@@ -41,6 +42,17 @@ contextBridge.exposeInMainWorld('dsdesk', {
   getTrustedDevices: () => ipcRenderer.invoke('get-trusted-devices'),
   addTrustedDevice: (id) => ipcRenderer.invoke('add-trusted-device', id),
   removeTrustedDevice: (id) => ipcRenderer.invoke('remove-trusted-device', id),
+
+  // ── Auto-Start Settings ──
+  getAutostart: () => ipcRenderer.invoke('get-autostart'),
+  setAutostart: (enabled) => ipcRenderer.invoke('set-autostart', enabled),
+
+  // ── Settings ──
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
+
+  // ── Admin Check ──
+  isAdmin: () => ipcRenderer.invoke('is-admin'),
 
   // ── Input Simulation ──
   simulateInput: (data) => ipcRenderer.send('simulate-input', data),

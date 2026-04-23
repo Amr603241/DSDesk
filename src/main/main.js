@@ -313,6 +313,55 @@ ipcMain.handle('remove-trusted-device', (event, deviceId) => {
   return true;
 });
 
+// ── Auto-Start Settings ──
+ipcMain.handle('get-autostart', () => {
+  return store.get('autostart') || false;
+});
+
+ipcMain.handle('set-autostart', (event, enabled) => {
+  store.set('autostart', enabled);
+  const exePath = app.getPath('exe');
+  const regCmd = enabled 
+    ? `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "DSDesk" /t REG_SZ /d "\\"${exePath}\\"" /f`
+    : `reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "DSDesk" /f`;
+  exec(regCmd);
+  return true;
+});
+
+// ── Settings Storage ──
+ipcMain.handle('get-settings', () => {
+  return store.get('settings') || {
+    quality: 'high',
+    fps: 60,
+    bitrate: 30,
+    cursor: true,
+    clipboard: true,
+    autostart: false
+  };
+});
+
+ipcMain.handle('set-settings', (event, settings) => {
+  store.set('settings', settings);
+  return true;
+});
+
+// ── Screenshot Capture ──
+ipcMain.handle('take-screenshot', async () => {
+  try {
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: { width: 1920, height: 1080 }
+    });
+    if (sources.length > 0) {
+      return sources[0].thumbnail.toDataURL();
+    }
+    return null;
+  } catch (e) {
+    console.error('Screenshot failed:', e);
+    return null;
+  }
+});
+
 // Window controls
 ipcMain.on('window-minimize', () => {
   if (mainWindow) mainWindow.minimize();
@@ -334,6 +383,17 @@ ipcMain.on('window-close', () => {
 
 ipcMain.handle('is-maximized', () => {
   return mainWindow ? mainWindow.isMaximized() : false;
+});
+
+// ── Admin Check ──
+ipcMain.handle('is-admin', () => {
+  try {
+    const { execSync } = require('child_process');
+    execSync('net session', { stdio: 'ignore' });
+    return true;
+  } catch (e) {
+    return false;
+  }
 });
 
 // ── App lifecycle ──

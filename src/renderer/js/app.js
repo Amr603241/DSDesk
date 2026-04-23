@@ -597,8 +597,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // Settings Modal
+    // Settings Modal - PRO MAX
     document.getElementById('btn-settings')?.addEventListener('click', () => {
+        // Load current settings
+        document.getElementById('setting-device-id').textContent = state.deviceId;
         document.getElementById('settings-modal')?.classList.remove('hidden');
     });
     
@@ -614,23 +616,88 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('shortcuts-modal')?.classList.remove('hidden');
     });
     
-    // Quality Selector
-    document.querySelectorAll('.quality-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            logDebug(`Video quality set to: ${btn.dataset.quality}`);
-        };
+    // Settings Tabs
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('tab-' + tab.dataset.tab)?.classList.add('active');
+        });
     });
     
-    // FPS Selector
-    document.querySelectorAll('.fps-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.fps-btn').forEach(b => b.classList.remove('active'));
+    // Quality Presets - PRO MAX
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            logDebug(`FPS set to: ${btn.dataset.fps}`);
-        };
+            const preset = btn.dataset.preset;
+            if (webrtc) {
+                webrtc.setQualityPreset(preset);
+                ui.showToast(`جودة الصورة: ${preset}`, 'info');
+            }
+            logDebug(`Quality preset: ${preset}`);
+        });
     });
+    
+    // FPS Selector - PRO MAX
+    document.querySelectorAll('#tab-video .fps-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#tab-video .fps-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const fps = parseInt(btn.dataset.fps);
+            if (webrtc) {
+                webrtc.fps = fps;
+                ui.showToast(`FPS: ${fps}`, 'info');
+            }
+            logDebug(`FPS: ${fps}`);
+        });
+    });
+    
+    // Bitrate Slider
+    const bitrateSlider = document.getElementById('setting-bitrate');
+    const bitrateValue = document.getElementById('bitrate-value');
+    if (bitrateSlider && bitrateValue) {
+        bitrateSlider.addEventListener('input', () => {
+            bitrateValue.textContent = `${bitrateSlider.value} Mbps`;
+        });
+    }
+    
+    // Save Settings
+    document.getElementById('btn-save-settings')?.addEventListener('click', async () => {
+        // Save all settings
+        const settings = {
+            quality: document.querySelector('.preset-btn.active')?.dataset.preset || 'high',
+            fps: parseInt(document.querySelector('#tab-video .fps-btn.active')?.dataset.fps || 60),
+            bitrate: parseInt(document.getElementById('setting-bitrate')?.value || 30),
+            cursor: document.getElementById('setting-cursor')?.checked ?? true,
+            remoteCursor: document.getElementById('setting-remote-cursor')?.checked ?? true,
+            clipboard: document.getElementById('setting-clipboard')?.checked ?? true,
+            autostart: document.getElementById('setting-autostart')?.checked ?? false,
+            background: document.getElementById('setting-background')?.checked ?? false,
+            server: document.getElementById('setting-server')?.value || serverUrl
+        };
+        
+        // Apply settings to WebRTC
+        if (webrtc) {
+            webrtc.setQualityPreset(settings.quality);
+            webrtc.fps = settings.fps;
+            webrtc.maxBitrate = settings.bitrate * 1000000;
+        }
+        
+        localStorage.setItem('dsdesk_settings', JSON.stringify(settings));
+        ui.showToast('تم حفظ الإعدادات', 'success');
+        document.getElementById('settings-modal')?.classList.add('hidden');
+        logDebug('Settings saved: ' + JSON.stringify(settings));
+    });
+    
+    // Load Settings
+    const savedSettings = JSON.parse(localStorage.getItem('dsdesk_settings') || '{}');
+    if (savedSettings.quality) {
+        document.querySelectorAll('.preset-btn').forEach(b => {
+            if (b.dataset.preset === savedSettings.quality) b.classList.add('active');
+        });
+    }
 
     // Remote Input Forwarding - Professional Optimization v1.9.0
     const remoteVideo = document.getElementById('remote-video');

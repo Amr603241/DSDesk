@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DSDesk - Remote Desktop</title>
+  <title>DSDesk PRO MAX - Remote Desktop</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
           <path d="M10 15 Q14 8 18 15" stroke="url(#logoGrad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         </svg>
         <span class="logo-text">DSDesk</span>
-        <span class="logo-version" style="color: var(--accent); font-weight: 700; text-shadow: 0 0 12px var(--accent-glow);">VER: 3.0 <span style="color: var(--secondary);">PRO</span></span>
+        <span class="logo-version" style="color: var(--accent); font-weight: 700; text-shadow: 0 0 12px var(--accent-glow);">VER: 3.5 <span style="color: var(--secondary);">PRO MAX</span></span>
         <span id="badge-installed" class="badge-installed hidden">نسخة مثبتة</span>
       </div>
       <div class="titlebar-actions">
@@ -370,65 +370,228 @@
            </div>
         </div>
 
-        <!-- Settings Modal -->
+<!-- Settings Modal - PRO MAX -->
         <div class="modal hidden" id="settings-modal">
            <div class="modal-content settings-content glass">
-              <div class="modal-header">
-                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-                 <h2>الإعدادات</h2>
+              <div class="settings-tabs">
+                 <button class="settings-tab active" data-tab="general">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                   عام
+                 </button>
+                 <button class="settings-tab" data-tab="video">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    الصورة
+                 </button>
+                 <button class="settings-tab" data-tab="security">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    الحماية
+                 </button>
+                 <button class="settings-tab" data-tab="connection">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                    الاتصال
+                 </button>
+                 <button class="settings-tab" data-tab="advanced">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                    متقدم
+                 </button>
               </div>
+              
               <div class="settings-body">
-                 <div class="settings-section">
-                    <h3 class="section-title">جودة الفيديو</h3>
-                    <div class="quality-selector">
-                       <button class="quality-btn" data-quality="low">منخفضة</button>
-                       <button class="quality-btn active" data-quality="medium">متوسطة</button>
-                       <button class="quality-btn" data-quality="high">عالية</button>
-                       <button class="quality-btn" data-quality="ultra">ممتازة</button>
+                 <!-- Tab: عام -->
+                 <div class="settings-tab-content active" id="tab-general">
+                    <div class="setting-group">
+                       <label>معرف الجهاز (ID)</label>
+                       <div class="setting-value" id="setting-device-id">--- --- ---</div>
                     </div>
-                    <p class="settings-hint">تؤثر على استهلاك الإنترنت وجودة الصورة</p>
+                    <div class="setting-group">
+                       <label>اسم الجهاز</label>
+                       <input type="text" id="setting-device-name" class="setting-input" placeholder="اسم الجهاز">
+                    </div>
+                    <div class="setting-group">
+                       <label>بدء تلقائي عند التشغيل</label>
+                       <label class="switch-container small">
+                          <input type="checkbox" id="setting-autostart">
+                          <span class="switch-slider"></span>
+                       </label>
+                    </div>
+                    <div class="setting-group">
+                       <label>التشغيل في الخلفية</label>
+                       <label class="switch-container small">
+                          <input type="checkbox" id="setting-background">
+                          <span class="switch-slider"></span>
+                       </label>
+                    </div>
+                    <div class="setting-group">
+                       <label>التحقق بخطوتين (2FA)</label>
+                       <label class="switch-container small">
+                          <input type="checkbox" id="setting-2fa">
+                          <span class="switch-slider"></span>
+                       </label>
+                    </div>
                  </div>
-                 <div class="settings-section">
-                    <h3 class="section-title">FPS</h3>
-                    <div class="fps-selector">
-                       <button class="fps-btn" data-fps="30">30</button>
-                       <button class="fps-btn active" data-fps="60">60</button>
-                       <button class="fps-btn" data-fps="120">120</button>
+                 
+                 <!-- Tab: الصورة -->
+                 <div class="settings-tab-content" id="tab-video">
+                    <div class="setting-group">
+                       <label>جودة الصورة</label>
+                       <div class="quality-presets">
+                          <button class="preset-btn" data-preset="balanced">⚡ متوازن</button>
+                          <button class="preset-btn" data-preset="fast">🚀 سريع</button>
+                          <button class="preset-btn" data-preset="quality">🎯 جودة</button>
+                          <button class="preset-btn active" data-preset="high">🔥 عالي</button>
+                          <button class="preset-btn" data-preset="ultra">💎Ultra</button>
+                          <button class="preset-btn" data-preset="4k">📺 4K</button>
+                       </div>
+                    </div>
+                    <div class="setting-group">
+                       <label>معدل الإطارات (FPS)</label>
+                       <div class="fps-selector large">
+                          <button class="fps-btn" data-fps="30">30</button>
+                          <button class="fps-btn active" data-fps="60">60</button>
+                          <button class="fps-btn" data-fps="90">90</button>
+                          <button class="fps-btn" data-fps="120">120</button>
+                       </div>
+                    </div>
+                    <div class="setting-group">
+                       <label>إظهار المؤشر</label>
+                       <label class="switch-container small">
+                          <input type="checkbox" id="setting-cursor" checked>
+                          <span class="switch-slider"></span>
+                       </label>
+                    </div>
+                    <div class="setting-group">
+                       <label>إظهار الماوس على الشاشة</label>
+                       <label class="switch-container small">
+                          <input type="checkbox" id="setting-remote-cursor" checked>
+                          <span class="switch-slider"></span>
+                       </label>
+                    </div>
+                    <div class="setting-group">
+                       <label>تسجيل الشاشة</label>
+                       <label class="switch-container small">
+                          <input type="checkbox" id="setting-recording">
+                          <span class="switch-slider"></span>
+                       </label>
                     </div>
                  </div>
-                 <div class="settings-section">
-                    <h3 class="section-title">إعدادات متقدمة</h3>
-                    <div class="toggle-setting">
-                       <label class="toggle-label">
-                          <span>مزامنة الحافظة</span>
-                          <label class="switch-container">
-                            <input type="checkbox" id="setting-clipboard" checked>
-                            <span class="switch-slider"></span>
-                          </label>
+                 
+                 <!-- Tab: الحماية -->
+                 <div class="settings-tab-content" id="tab-security">
+                    <div class="setting-group">
+                       <label>كلمة المرور</label>
+                       <div class="password-manager">
+                          <input type="password" id="setting-password" class="setting-input" placeholder="كلمة المرور">
+                          <button id="btn-gen-password" class="btn-icon" title="توليد">
+                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3 3L18.5 7.5"/></svg>
+                          </button>
+                       </div>
+                    </div>
+                    <div class="setting-group">
+                       <label>الحماية مفعلة</label>
+                       <label class="switch-container small">
+                          <input type="checkbox" id="setting-password-enabled" checked>
+                          <span class="switch-slider"></span>
                        </label>
                     </div>
-                    <div class="toggle-setting">
-                       <label class="toggle-label">
-                          <span>نقل الملفات</span>
-                          <label class="switch-container">
-                            <input type="checkbox" id="setting-files" checked>
-                            <span class="switch-slider"></span>
-                          </label>
+                    <div class="setting-group">
+                       <label>الأجهزة الموثوقة</label>
+                       <div class="trusted-list" id="trusted-devices-list">
+                          <div class="empty-state small">لا توجد أجهزة موثوقة</div>
+                       </div>
+                    </div>
+                    <div class="setting-group">
+                       <label>قائمة IPs المسموحة (Whitelist)</label>
+                       <textarea id="setting-ip-whitelist" class="setting-textarea" placeholder="192.168.1.1&#10;10.0.0.1"></textarea>
+                    </div>
+                    <div class="setting-group">
+                       <label>تسجيل الجلسات</label>
+                       <label class="switch-container small">
+                          <input type="checkbox" id="setting-session-log">
+                          <span class="switch-slider"></span>
                        </label>
                     </div>
-                    <div class="toggle-setting">
-                       <label class="toggle-label">
-                          <span>إظهار المؤشر</span>
-                          <label class="switch-container">
-                            <input type="checkbox" id="setting-cursor" checked>
-                            <span class="switch-slider"></span>
-                          </label>
-                       </label>
+                 </div>
+                 
+                 <!-- Tab: الاتصال -->
+                 <div class="settings-tab-content" id="tab-connection">
+                    <div class="setting-group">
+                       <label>خادم الإشارات (Signaling)</label>
+                       <input type="text" id="setting-server" class="setting-input" placeholder="https://dsdesk.onrender.com">
+                    </div>
+                    <div class="setting-group">
+                       <label>خادم TURN</label>
+                       <input type="text" id="setting-turn" class="setting-input" placeholder="turn:yourturn.com:3478">
+                    </div>
+                    <div class="setting-group">
+                       <label>用户名 TURN</label>
+                       <input type="text" id="setting-turn-user" class="setting-input" placeholder="username">
+                    </div>
+                    <div class="setting-group">
+                       <label>كلمة مرور TURN</label>
+                       <input type="password" id="setting-turn-pass" class="setting-input" placeholder="password">
+                    </div>
+                    <div class="setting-group">
+                       <label>Mode الاتصال</label>
+                       <select id="setting-connection-mode" class="setting-select">
+                          <option value="auto">تلقائي (UDP + TCP)</option>
+                          <option value="udp">UDP فقط</option>
+                          <option value="tcp">TCP فقط (للجدران النارية)</option>
+                          <option value="relay">TURN فقط (Relay)</option>
+                       </select>
+                    </div>
+                    <div class="setting-group">
+                       <label>Port Forward</label>
+                       <input type="number" id="setting-port" class="setting-input small" placeholder="8000">
+                    </div>
+                 </div>
+                 
+                 <!-- Tab: متقدم -->
+                 <div class="settings-tab-content" id="tab-advanced">
+                    <div class="setting-group">
+                       <label>Bitrate الأقصى (Mbps)</label>
+                       <input type="range" id="setting-bitrate" min="1" max="60" value="30" class="setting-range">
+                       <span class="range-value" id="bitrate-value">30 Mbps</span>
+                    </div>
+                    <div class="setting-group">
+                       <label>ضغط الصوت</label>
+                       <select id="setting-audio" class="setting-select">
+                          <option value="off">معطل</option>
+                          <option value="on">مفعّل</option>
+                          <option value="voip">VOIP فقط</option>
+                       </select>
+                    </div>
+                    <div class="setting-group">
+                       <label>Codec الفيديو</label>
+                       <select id="setting-codec" class="setting-select">
+                          <option value="auto">تلقائي</option>
+                          <option value="h264">H.264</option>
+                          <option value="vp9">VP9</option>
+                          <option value="av1">AV1</option>
+                       </select>
+                    </div>
+                    <div class="setting-group">
+                       <label>Latency Mode</label>
+                       <select id="setting-latency" class="setting-select">
+                          <option value="low">منخفض (لألعاب)</option>
+                          <option value="normal" selected>عادي</option>
+                          <option value="high">عالي (للفيديو)</option>
+                       </select>
+                    </div>
+                    <div class="setting-group">
+                       <button class="btn btn-danger" id="btn-reset-settings">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                          إعادة تعيين الافتراضي
+                       </button>
                     </div>
                  </div>
               </div>
+              
               <div class="modal-footer">
-                 <button id="btn-close-settings" class="btn-secondary">إغلاق</button>
+                 <button id="btn-save-settings" class="btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    حفظ
+                 </button>
+                 <button id="btn-close-settings" class="btn-secondary">إلغاء</button>
               </div>
            </div>
         </div>
