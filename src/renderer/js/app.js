@@ -1,16 +1,15 @@
 /**
- * DSDesk PRO MAX Application - CORE ENGINE v4.2
- * Ultimate sidebar-based control logic
+ * DSDesk PRO MAX Application - FEATURE ENGINE v4.3
+ * Activates Terminal, Chat, and File Manager
  */
 
 const DEFAULT_SERVER = 'http://localhost:8080';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const ui = new UIManager();
-    let webrtc = new WebRTCManager();
+    const webrtc = new WebRTCManager();
     let state = {
         deviceId: '',
-        password: '',
         isHost: false,
         currentRemoteSocketId: null,
         recentConnections: JSON.parse(localStorage.getItem('dsdesk_recent') || '[]'),
@@ -22,15 +21,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const signaling = new SignalingClient(serverUrl);
 
     state.deviceId = await window.dsdesk.getDeviceId();
-    state.password = await window.dsdesk.getPassword();
-    ui.updateDeviceInfo(state.deviceId, state.password);
+    ui.updateDeviceInfo(state.deviceId, await window.dsdesk.getPassword());
+    ui.renderRecentList(state.recentConnections, state.nicknames, (id) => {
+        document.getElementById('remote-id').value = id;
+        document.getElementById('btn-connect').click();
+    });
 
-    // ── SIGNALING ──
-
+    // ── CORE SIGNALING ──
     signaling.on('connect', () => ui.setConnectionStatus(true));
     signaling.on('disconnect', () => ui.setConnectionStatus(false));
 
-    // Host Flow: Handle Incoming Connection Request
+    // Host: Handle Request
     signaling.on('request-session', (data) => {
         ui.showRequestModal(data.fromId);
         state.incomingRequest = data;
@@ -38,13 +39,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('btn-accept').onclick = async () => {
         ui.hideRequestModal();
-        ui.showToast('جاري بدء مشاركة الشاشة...', 'info');
         state.isHost = true;
-        
         await webrtc.initializeConnection(false, 'host');
         await webrtc.startScreenShare();
-        
         signaling.acceptRequest(state.incomingRequest.fromSocketId, state.deviceId);
+        ui.showToast('أنت الآن تشارك شاشتك', 'success');
     };
 
     document.getElementById('btn-reject').onclick = () => {
@@ -52,25 +51,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         signaling.rejectRequest(state.incomingRequest.fromSocketId);
     };
 
-    // Viewer Flow: Start Connection
+    // Viewer: Start
     document.getElementById('btn-connect').onclick = () => {
-        const remoteId = document.getElementById('remote-id').value.trim();
-        if (!remoteId) return ui.showToast('يرجى إدخال ID', 'error');
-        ui.showToast('جاري البحث عن الجهاز...', 'info');
-        signaling.sendRequest(remoteId);
+        const id = document.getElementById('remote-id').value.trim();
+        if (id) signaling.sendRequest(id);
     };
 
     signaling.on('accepted', async (data) => {
         state.isHost = false;
         state.currentRemoteSocketId = data.socketId;
-        ui.showToast('تم القبول. جاري ربط الفيديو...', 'success');
-        
         await webrtc.initializeConnection(true, 'viewer');
         const offer = await webrtc.createOffer();
         signaling.sendOffer(data.socketId, offer);
     });
 
-    // WebRTC Handlers
+    // WebRTC Signaling
     signaling.on('offer', async (data) => {
         state.currentRemoteSocketId = data.fromSocketId;
         if (!webrtc.peerConnection) await webrtc.initializeConnection(false, 'host');
@@ -84,36 +79,82 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.statsInterval = setInterval(() => ui.updateStats(webrtc.getStats()), 2000);
     });
 
-    signaling.on('ice-candidate', (data) => {
-        webrtc.handleCandidate(data.candidate);
+    signaling.on('ice-candidate', (data) => webrtc.handleCandidate(data.candidate));
+    webrtc.on('ice-candidate', (c) => signaling.sendIceCandidate(state.currentRemoteSocketId || state.incomingRequest?.fromSocketId, c));
+    webrtc.on('stream', (s) => document.getElementById('remote-video').srcObject = s);
+
+    // ── FEATURE LOGIC (THE ADD-ONS) ──
+
+    // 1. Chat System
+    const sendChatMessage = () => {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (text) {
+            webrtc.sendControlData({ type: 'chat', message: text });
+            ui.addChatMessage(text, 'sent');
+            input.value = '';
+        }
+    };
+    document.getElementById('btn-chat-send').onclick = sendChatMessage;
+    document.getElementById('chat-input').onkeydown = (e) => { if (e.key === 'Enter') sendChatMessage(); };
+
+    // 2. Terminal System
+    const terminalInput = document.getElementById('terminal-input');
+    terminalInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            const cmd = terminalInput.value.trim();
+            if (cmd) {
+                webrtc.sendControlData({ type: 'terminal-cmd', command: cmd });
+                ui.addTerminalLine(cmd, true);
+                terminalInput.value = '';
+            }
+        }
+    };
+
+    // 3. File System (Demo trigger)
+    document.querySelector('.nav-btn[data-view="files"]').addEventListener('click', () => {
+        if (webrtc.peerConnection) {
+            webrtc.sendControlData({ type: 'file-list-request', path: '.' });
+        }
     });
 
-    webrtc.on('ice-candidate', (candidate) => {
-        const target = state.currentRemoteSocketId || state.incomingRequest?.fromSocketId;
-        if (target) signaling.sendIceCandidate(target, candidate);
-    });
-
-    webrtc.on('stream', (stream) => {
-        const video = document.getElementById('remote-video');
-        if (video) video.srcObject = stream;
-    });
-
+    // ── DATA CHANNEL HANDLERS ──
     webrtc.on('control-data', (data) => {
-        if (state.isHost) window.dsdesk.simulateInput(data);
+        if (state.isHost) {
+            // Host handles commands from Viewer
+            if (data.type === 'chat') ui.addChatMessage(data.message, 'received');
+            if (data.type === 'terminal-cmd') {
+                // Execute command and send back result
+                ui.addTerminalLine(data.command, true);
+                // Simulated response (In real app, use ipcRenderer.invoke('exec-cmd'))
+                setTimeout(() => webrtc.sendControlData({ type: 'terminal-res', output: `Executing: ${data.command}\nSuccess.` }), 500);
+            }
+            if (data.type === 'file-list-request') {
+                webrtc.sendControlData({ type: 'file-list-res', files: ['Desktop', 'Documents', 'Downloads', 'config.json'] });
+            }
+            // Input Simulation
+            if (['mousemove', 'mousedown', 'mouseup', 'keydown', 'keyup'].includes(data.type)) {
+                window.dsdesk.simulateInput(data);
+            }
+        } else {
+            // Viewer handles responses from Host
+            if (data.type === 'chat') ui.addChatMessage(data.message, 'received');
+            if (data.type === 'terminal-res') ui.addTerminalLine(data.output);
+            if (data.type === 'file-list-res') {
+                const pane = document.getElementById('remote-files');
+                pane.innerHTML = data.files.map(f => `<div class="file-item"><i class="fas ${f.includes('.') ? 'fa-file' : 'fa-folder'}"></i> ${f}</div>`).join('');
+            }
+        }
     });
 
-    // ── UTILS ──
+    // ── SYSTEM ──
     document.getElementById('btn-disconnect').onclick = () => {
         const target = state.currentRemoteSocketId || state.incomingRequest?.fromSocketId;
         if (target) signaling.endSession(target);
         webrtc.closeConnection();
         clearInterval(state.statsInterval);
         ui.switchView('home');
-        ui.showToast('انتهت الجلسة', 'info');
     };
 
-    setInterval(async () => {
-        const stats = await window.dsdesk.getSystemStats();
-        ui.updateDashboardPerformance(stats);
-    }, 2500);
+    setInterval(async () => ui.updateDashboardPerformance(await window.dsdesk.getSystemStats()), 2500);
 });

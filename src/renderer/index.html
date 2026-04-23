@@ -12,7 +12,7 @@
 </head>
 <body>
 
-  <!-- ═══════════════ Unified Sidebar ═══════════════ -->
+  <!-- ═══════════════ Sidebar ═══════════════ -->
   <aside class="sidebar">
     <div class="sidebar-top">
       <div class="brand">
@@ -20,8 +20,8 @@
       </div>
       <nav class="nav-menu">
         <button class="nav-btn active" data-view="home"><i class="fas fa-th-large"></i><span>الرئيسية</span></button>
-        <button class="nav-btn" data-view="remote"><i class="fas fa-desktop"></i><span>التحكم</span></button>
         <button class="nav-btn" data-view="files"><i class="fas fa-folder-open"></i><span>الملفات</span></button>
+        <button class="nav-btn" data-view="terminal"><i class="fas fa-terminal"></i><span>الطرفية</span></button>
         <button class="nav-btn" data-view="security"><i class="fas fa-shield-halved"></i><span>الأمان</span></button>
       </nav>
     </div>
@@ -34,10 +34,8 @@
     </div>
   </aside>
 
-  <!-- ═══════════════ Main Workspace ═══════════════ -->
+  <!-- ═══════════════ Workspace ═══════════════ -->
   <main class="workspace">
-    
-    <!-- Custom Titlebar (Integrated) -->
     <header class="header">
       <div class="header-search">
         <i class="fas fa-search"></i>
@@ -53,17 +51,15 @@
 
     <div class="content-area">
       
-      <!-- DASHBOARD VIEW -->
+      <!-- VIEW: HOME -->
       <section class="view active" id="view-home">
         <div class="welcome-banner">
-          <h1>مرحباً بك في <span class="gradient-text">DSDesk Pro Max</span></h1>
-          <p>نظام التحكم عن بعد الأكثر ذكاءً وأماناً.</p>
+          <h1>مرحباً بك، <span class="gradient-text" id="user-display-name">Host</span></h1>
+          <p>استخدم الـ ID أدناه لمشاركة شاشتك أو أدخل ID في الأعلى للتحكم.</p>
         </div>
-
         <div class="grid-layout">
-          <!-- Identity Card -->
           <div class="glass-card identity-card">
-            <div class="card-label">هويتك الرقمية</div>
+            <div class="card-label">معرّف الجهاز الخاص بك</div>
             <div class="id-value-large" id="device-id">--- --- ---</div>
             <div class="pwd-section">
               <span class="text-dim">كلمة المرور:</span>
@@ -75,51 +71,62 @@
             </div>
             <button id="btn-copy-id" class="btn-outline-primary"><i class="far fa-copy"></i> نسخ المعرّف</button>
           </div>
-
-          <!-- Performance Card -->
           <div class="glass-card stats-card">
-            <div class="card-label">أداء النظام</div>
+            <div class="card-label">أداء النظام المحلي</div>
             <div class="stat-row">
-              <div class="stat-info">
-                <span>المعالج (CPU)</span>
-                <span id="dash-cpu-text">0%</span>
-              </div>
+              <div class="stat-info"><span>CPU</span> <span id="dash-cpu-text">0%</span></div>
               <div class="progress-bg"><div id="dash-cpu-bar" class="progress-fill primary"></div></div>
             </div>
             <div class="stat-row">
-              <div class="stat-info">
-                <span>الذاكرة (RAM)</span>
-                <span id="dash-ram-text">0%</span>
-              </div>
+              <div class="stat-info"><span>RAM</span> <span id="dash-ram-text">0%</span></div>
               <div class="progress-bg"><div id="dash-ram-bar" class="progress-fill secondary"></div></div>
             </div>
           </div>
-
-          <!-- Recent Connections -->
-          <div class="glass-card recent-connections">
+          <div class="glass-card recent-connections" style="grid-column: span 2;">
             <div class="card-label">الاتصالات الأخيرة</div>
-            <div class="recent-list" id="recent-list">
-              <div class="empty-state">لا توجد اتصالات حديثة</div>
+            <div id="recent-list" class="recent-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: FILES -->
+      <section class="view" id="view-files">
+        <div class="file-manager glass-card" style="height: 100%; gap: 0; padding: 0;">
+          <div class="fm-header">
+            <div class="pane-title">جهازي (Local)</div>
+            <div class="pane-title">الجهاز البعيد (Remote)</div>
+          </div>
+          <div class="fm-body">
+            <div class="fm-pane" id="local-files"></div>
+            <div class="fm-pane" id="remote-files">
+              <div class="empty-state">يجب الاتصال بجهاز لعرض الملفات</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- SESSION VIEW (Full screen overlay) -->
+      <!-- VIEW: TERMINAL -->
+      <section class="view" id="view-terminal">
+        <div class="terminal-container glass-card" style="height: 100%; background: #000; font-family: 'JetBrains Mono'; padding: 20px;">
+          <div id="terminal-output" style="flex: 1; overflow-y: auto; color: #00ff00; font-size: 13px;"></div>
+          <div class="terminal-input-row" style="display: flex; gap: 10px; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+            <span style="color: #00ff00;">$</span>
+            <input type="text" id="terminal-input" style="flex: 1; background: transparent; border: none; color: #fff; outline: none;" placeholder="أدخل أمراً...">
+          </div>
+        </div>
+      </section>
+
+      <!-- SESSION OVERLAY -->
       <section class="view" id="view-session">
         <div class="remote-viewport">
           <video id="remote-video" autoplay muted playsinline></video>
-          
-          <!-- Floating Toolset -->
           <div class="floating-toolbar">
-            <button class="tool-btn" id="btn-files-toggle" title="الملفات"><i class="fas fa-folder-open"></i></button>
-            <button class="tool-btn" id="btn-tasks-toggle" title="المهام"><i class="fas fa-tasks"></i></button>
-            <button class="tool-btn" id="btn-chat-toggle" title="المحادثة"><i class="fas fa-comments"></i></button>
+            <button class="tool-btn" onclick="ui.switchInternalView('files')"><i class="fas fa-folder-open"></i></button>
+            <button class="tool-btn" onclick="ui.switchInternalView('terminal')"><i class="fas fa-terminal"></i></button>
+            <button class="tool-btn" id="btn-chat-toggle"><i class="fas fa-comments"></i></button>
             <div class="tool-sep"></div>
-            <button class="tool-btn disconnect" id="btn-disconnect" title="إنهاء"><i class="fas fa-power-off"></i></button>
+            <button class="tool-btn disconnect" id="btn-disconnect"><i class="fas fa-power-off"></i></button>
           </div>
-
-          <!-- Performance HUD -->
           <div class="hud-stats">
             <div class="hud-item"><span>Latency:</span> <span id="stat-latency">--ms</span></div>
             <div class="hud-item"><span>FPS:</span> <span id="stat-fps">--</span></div>
@@ -133,11 +140,24 @@
   <!-- Modals -->
   <div class="modal-overlay" id="modal-request">
     <div class="modal glass">
-      <h3>طلب اتصال وارد</h3>
-      <p>الجهاز <strong id="request-from-id">---</strong> يطلب التحكم بك.</p>
+      <div class="icon-circle"><i class="fas fa-user-shield"></i></div>
+      <h3>طلب تحكم وارد</h3>
+      <p>الجهاز <strong id="request-from-id">---</strong> يرغب في التحكم بجهازك.</p>
       <div class="modal-actions">
-        <button id="btn-accept" class="btn-primary">قبول</button>
-        <button id="btn-reject" class="btn-secondary">رفض</button>
+        <button id="btn-accept" class="btn-primary">موافقة (Accept)</button>
+        <button id="btn-reject" class="btn-secondary">رفض (Decline)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Panel (Slide-in) -->
+  <div class="chat-overlay" id="chat-panel">
+    <div class="chat-box glass">
+      <div class="chat-header">محادثة الجلسة <button onclick="document.getElementById('chat-panel').classList.remove('active')"><i class="fas fa-times"></i></button></div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="اكتب رسالة...">
+        <button id="btn-chat-send"><i class="fas fa-paper-plane"></i></button>
       </div>
     </div>
   </div>

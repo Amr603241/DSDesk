@@ -1,12 +1,13 @@
 /**
- * DSDesk UI Manager - SIDEBAR EDITION
- * Handles sidebar navigation and the unified workspace logic
+ * DSDesk UI Manager - Ultimate Features Edition
  */
 
 class UIManager {
   constructor() {
     this.views = {
       home: document.getElementById('view-home'),
+      files: document.getElementById('view-files'),
+      terminal: document.getElementById('view-terminal'),
       session: document.getElementById('view-session')
     };
 
@@ -25,12 +26,16 @@ class UIManager {
       dashCpuBar: document.getElementById('dash-cpu-bar'),
       dashCpuText: document.getElementById('dash-cpu-text'),
       dashRamBar: document.getElementById('dash-ram-bar'),
-      dashRamText: document.getElementById('dash-ram-text')
+      dashRamText: document.getElementById('dash-ram-text'),
+      terminalOutput: document.getElementById('terminal-output'),
+      chatPanel: document.getElementById('chat-panel'),
+      chatMessages: document.getElementById('chat-messages')
     };
 
     this._setupWindowControls();
     this._setupNavigation();
     this._setupQuickActions();
+    this._setupChat();
   }
 
   _setupNavigation() {
@@ -39,12 +44,31 @@ class UIManager {
       btn.onclick = () => {
         btns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const viewName = btn.getAttribute('data-view');
-        // Handle view switching (only home for now, others can be added)
-        if (viewName === 'home') this.switchView('home');
-        else this.showToast('هذه الميزة ستتوفر قريباً في التحديث القادم', 'info');
+        this.switchView(btn.getAttribute('data-view'));
       };
     });
+  }
+
+  _setupChat() {
+    document.getElementById('btn-chat-toggle')?.addEventListener('click', () => {
+        this.elements.chatPanel.classList.toggle('active');
+    });
+  }
+
+  addChatMessage(text, type = 'received') {
+    const msg = document.createElement('div');
+    msg.className = `msg ${type}`;
+    msg.textContent = text;
+    this.elements.chatMessages.appendChild(msg);
+    this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
+  }
+
+  addTerminalLine(text, isCommand = false) {
+    const div = document.createElement('div');
+    div.className = isCommand ? 'terminal-cmd' : 'terminal-res';
+    div.textContent = isCommand ? `$ ${text}` : text;
+    this.elements.terminalOutput.appendChild(div);
+    this.elements.terminalOutput.scrollTop = this.elements.terminalOutput.scrollHeight;
   }
 
   _setupQuickActions() {
@@ -53,19 +77,13 @@ class UIManager {
       navigator.clipboard.writeText(id);
       this.showToast('تم نسخ المعرّف', 'success');
     });
-
-    document.getElementById('btn-toggle-pwd')?.addEventListener('click', (e) => {
+    
+    document.getElementById('btn-toggle-pwd')?.addEventListener('click', () => {
       if (this.elements.devicePassword.textContent.includes('•')) {
           this.elements.devicePassword.textContent = window.dsdesk_current_password || '******';
       } else {
           this.elements.devicePassword.textContent = '••••••';
       }
-    });
-
-    document.getElementById('btn-refresh-pwd')?.addEventListener('click', async () => {
-        const newPwd = await window.dsdesk.refreshPassword();
-        this.updateDeviceInfo(null, newPwd);
-        this.showToast('كلمة مرور جديدة نشطة', 'success');
     });
   }
 
@@ -78,33 +96,30 @@ class UIManager {
   switchView(viewName) {
     Object.keys(this.views).forEach(v => {
       const view = this.views[v];
-      if (v === viewName) {
-        view.classList.add('active');
-        view.style.display = 'flex';
-      } else {
-        view.classList.remove('active');
-        view.style.display = 'none';
+      if (view) {
+          view.classList.toggle('active', v === viewName);
+          view.style.display = v === viewName ? 'flex' : 'none';
       }
     });
   }
 
-  updateDeviceInfo(id, password) {
-    if (password) window.dsdesk_current_password = password;
-    if (this.elements.deviceId && id) {
-      this.elements.deviceId.textContent = id.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    }
-    if (this.elements.devicePassword) {
-      this.elements.devicePassword.textContent = '••••••';
-    }
+  switchInternalView(viewName) {
+      this.switchView(viewName);
+      // Update sidebar state
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-view') === viewName);
+      });
   }
 
-  setConnectionStatus(connected, text) {
-    if (this.elements.globalStatusDot) {
-        this.elements.globalStatusDot.className = connected ? 'status-dot status-online' : 'status-dot status-offline';
-    }
-    if (this.elements.globalStatusText) {
-        this.elements.globalStatusText.textContent = connected ? 'ONLINE' : 'OFFLINE';
-    }
+  updateDeviceInfo(id, password) {
+    if (password) window.dsdesk_current_password = password;
+    if (id) this.elements.deviceId.textContent = id.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    this.elements.devicePassword.textContent = '••••••';
+  }
+
+  setConnectionStatus(connected) {
+    this.elements.globalStatusDot.className = connected ? 'status-dot status-online' : 'status-dot status-offline';
+    this.elements.globalStatusText.textContent = connected ? 'ONLINE' : 'OFFLINE';
   }
 
   updateStats(stats) {
@@ -132,7 +147,6 @@ class UIManager {
   }
 
   renderRecentList(list, nicknames, onConnect) {
-    if (!this.elements.recentList) return;
     this.elements.recentList.innerHTML = '';
     if (list.length === 0) {
       this.elements.recentList.innerHTML = '<div class="empty-state">لا توجد اتصالات حديثة</div>';
@@ -140,13 +154,9 @@ class UIManager {
     }
     list.forEach(id => {
       const item = document.createElement('div');
-      item.className = 'recent-item-v';
-      item.style.padding = '12px';
-      item.style.background = 'rgba(255,255,255,0.03)';
-      item.style.borderRadius = '8px';
-      item.style.marginBottom = '8px';
-      item.style.cursor = 'pointer';
-      item.innerHTML = `<div style="font-size: 13px; font-weight: 600;">${nicknames[id] || id}</div>`;
+      item.className = 'recent-item-v glass-card';
+      item.style.padding = '16px';
+      item.innerHTML = `<div style="font-weight: 700;">${nicknames[id] || id}</div><div class="text-dim" style="font-size: 11px;">ID: ${id}</div>`;
       item.onclick = () => onConnect(id);
       this.elements.recentList.appendChild(item);
     });
@@ -160,12 +170,6 @@ class UIManager {
   hideRequestModal() {
     this.elements.modalRequest.classList.remove('active');
   }
-
-  showConnecting(text) {
-      this.showToast(text, 'info');
-  }
-
-  hideConnecting() {}
 }
 
 window.UIManager = UIManager;
