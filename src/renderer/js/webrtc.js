@@ -77,6 +77,37 @@ class WebRTCManager {
     this.fps = Math.min(fps, 120);
   }
 
+  // AI Engine: Set FPS
+  setFPS(fps) {
+    this.fps = fps;
+    console.log(`[AI] FPS set to: ${fps}`);
+  }
+
+  // AI Engine: Set Bitrate
+  setBitrate(bitrate) {
+    this.maxBitrate = bitrate;
+    this.bitrate = Math.floor(bitrate * 0.8);
+    console.log(`[AI] Bitrate set to: ${bitrate}`);
+  }
+
+  // AI Engine: Set Compression Level
+  setCompressionLevel(level) {
+    if (level === 'high') {
+      this.maxBitrate = 2000000;
+      this.jpegQuality = 60;
+    } else if (level === 'ultra') {
+      this.maxBitrate = 1000000;
+      this.jpegQuality = 50;
+    }
+    console.log(`[AI] Compression: ${level}`);
+  }
+
+  // AI Engine: Set Remote Cursor
+  setRemoteCursor(enabled) {
+    this.showRemoteCursor = enabled;
+    console.log(`[AI] Remote cursor: ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
   async initializeConnection(isOfferer = false, mode = 'viewer') {
     const logInternal = (msg) => {
         if (window.logDebugToApp) window.logDebugToApp(`[INTERNAL] ${msg}`);

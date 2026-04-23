@@ -1,7 +1,7 @@
 {
     "name": "dsdesk",
-    "version": "3.5.0",
-    "description": "DSDesk PRO MAX - All-in-One Remote Desktop (TeamViewer + AnyDesk + RustDesk)",
+    "version": "4.0.0",
+    "description": "DSDesk PRO MAX - Next-Gen AI-Powered Remote Desktop with Enterprise Features",
     "main": "index.js",
     "scripts": {
         "start": "electron .",
@@ -43,19 +43,8 @@
             "server/**/*"
         ],
         "win": {
-            "target": ["portable", "nsis"],
-            "sign": "sign-dummy.js",
-            "icon": "app_icon.ico"
-        },
-        "nsis": {
-            "oneClick": false,
-            "allowToChangeInstallationDirectory": true,
-            "createDesktopShortcut": true,
-            "createStartMenuShortcut": true,
-            "shortcutName": "DSDesk PRO MAX"
-        },
-        "portable": {
-            "artifactName": "DSDesk_PRO_MAX_Portable.exe"
+            "target": "portable",
+            "sign": "sign-dummy.js"
         }
     }
 }

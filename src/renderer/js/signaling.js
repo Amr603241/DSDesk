@@ -27,32 +27,38 @@ class SignalingClient {
 
 connect() {
     return new Promise((resolve, reject) => {
+      // Prevent duplicate connections
+      if (this.socket?.connected) {
+        console.log('[!] Already connected');
+        resolve();
+        return;
+      }
+      
       this.socket = io(this.serverUrl, {
         reconnection: true,
-        reconnectionAttempts: Infinity,
+        reconnectionAttempts: 3,
         reconnectionDelay: 2000,
-        reconnectionDelayMax: 10000,
-        timeout: 30000,
+        reconnectionDelayMax: 8000,
+        timeout: 15000,
         transports: ['polling', 'websocket'],
         forceNew: true
       });
 
       this.socket.on('connect', () => {
-        console.log('[✓] Connected to signaling server');
+        console.log('[✓] Connected to:', this.serverUrl);
         if (this.deviceId) {
-          console.log('[!] Re-registering following reconnection...');
           this.register(this.deviceId, this.password, this.passwordEnabled !== false);
         }
         resolve();
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('[✗] Signaling connection error:', error.message);
+        console.error('[✗] Error:', error.message);
+        reject(error);
       });
 
       this.socket.on('disconnect', (reason) => {
-          console.warn('[!] Disconnected from server:', reason);
-          if (window.logDebugToApp) window.logDebugToApp(`[SIGNAL] Disconnected: ${reason}`, 'warn');
+        console.warn('[!] Disconnected:', reason);
       });
 
       this._setupEventListeners();

@@ -1,14 +1,27 @@
 /**
- * DSDesk Application Orchestrator
- * Optimized Edition - No Redundancy, High Stability
+ * DSDesk PRO MAX Application
+ * Version 3.5.0 - All-in-One Remote Desktop
  */
+
+// === IMPROVED SERVER CONFIG ===
+// Priority: Local first, then cloud fallback
+const SERVER_CONFIG = {
+    primary: 'http://localhost:8080',
+    cloud: 'https://dsdesk.onrender.com',
+    timeout: 10000,
+    retries: 3
+};
 
 document.addEventListener('DOMContentLoaded', async () => {
     // ── 1. Initialization & State ──
     const ui = new UIManager();
-    const serverUrl = 'https://dsdesk.onrender.com';
+    
+    // Try local server first (faster), fall back to cloud
+    let serverUrl = localStorage.getItem('dsdesk_server') || SERVER_CONFIG.primary;
     const signaling = new SignalingClient(serverUrl);
     const webrtc = new WebRTCManager();
+    
+    console.log('[DSDesk] Starting... Server:', serverUrl);
 
     let state = {
         deviceId: '',
@@ -78,33 +91,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             ui.showToast('تنبيه: يرجى تشغيل البرنامج كمسؤول للتحكم الكامل.', 'warning');
         }
 
-        // Connection Sequence - Improved for Render Cold Start
-        ui.showToast('جاري الاتصال بالسيرفر...', 'info');
-        let connected = false;
-        const maxRetries = 6;
-        const baseDelay = 4000;
+        // === IMPROVED CONNECTION: Local First ===
+        ui.showToast('جاري الاتصال...', 'info');
         
-        for (let i = 1; i <= maxRetries && !connected; i++) {
-            logDebug(`Handshake attempt ${i}/${maxRetries}...`);
+        let connected = false;
+        const servers = [
+            SERVER_CONFIG.primary,  // localhost
+            SERVER_CONFIG.cloud   // cloud fallback
+        ];
+        
+        for (let i = 0; i < servers.length && !connected; i++) {
+            const url = servers[i];
+            ui.showToast(`جاري尝试: ${url.replace('https://', '').replace('http://', '')}...`, 'info');
+            signaling.serverUrl = url;
+            
             try {
-                // Try to connect directly (ping is just for wakeup)
                 await signaling.connect();
                 connected = true;
+                localStorage.setItem('dsdesk_server', url);
+                ui.setConnectionStatus(true, 'متصل');
+                console.log('[✓] Connected to:', url);
             } catch (err) {
-                logDebug(`Attempt ${i} error: ${err.message}`);
-                if (i < maxRetries) {
-                    const delay = baseDelay * i;
-                    ui.showToast(`جاري المحاولة ${i}/${maxRetries}...`, 'info');
-                    await new Promise(r => setTimeout(r, delay));
-                }
+                console.warn('[!] Failed:', url, err.message);
             }
         }
 
-        signaling.register(state.deviceId, state.password, state.passwordEnabled);
-        ui.setConnectionStatus(true, 'متصل');
-        logDebug('Device Online & Registered.');
+        if (connected) {
+            signaling.register(state.deviceId, state.password, state.passwordEnabled);
+            logDebug('Device Online & Registered.');
+        } else {
+            throw new Error('جميع السيرفرات غير متاحة');
+        }
 
-        // Initialize Address Book UI
         refreshAddressBook();
 
         // Initialize display info
@@ -615,6 +633,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-settings-home')?.addEventListener('click', () => {
         document.getElementById('setting-device-id').textContent = state.deviceId;
         document.getElementById('settings-modal')?.classList.remove('hidden');
+    });
+
+    // Refresh Button
+    document.getElementById('btn-refresh')?.addEventListener('click', async () => {
+        window.location.reload();
     });
 
     // Settings Modal - PRO MAX
