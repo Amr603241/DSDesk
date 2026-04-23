@@ -78,18 +78,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             ui.showToast('تنبيه: يرجى تشغيل البرنامج كمسؤول للتحكم الكامل.', 'warning');
         }
 
-        // Connection Sequence
-        ui.showToast('جاري الاتصال بالسيرفر العالمي...', 'info');
+        // Connection Sequence - Improved for Render Cold Start
+        ui.showToast('جاري الاتصال بالسيرفر...', 'info');
         let connected = false;
-        for (let i = 1; i <= 3 && !connected; i++) {
-            logDebug(`Handshake attempt ${i}/3...`);
+        const maxRetries = 6;
+        const baseDelay = 4000;
+        
+        for (let i = 1; i <= maxRetries && !connected; i++) {
+            logDebug(`Handshake attempt ${i}/${maxRetries}...`);
             try {
-                await signaling.ping(); // Wakeup call
+                // Try to connect directly (ping is just for wakeup)
                 await signaling.connect();
                 connected = true;
             } catch (err) {
-                if (i === 3) throw err;
-                await new Promise(r => setTimeout(r, 3000));
+                logDebug(`Attempt ${i} error: ${err.message}`);
+                if (i < maxRetries) {
+                    const delay = baseDelay * i;
+                    ui.showToast(`جاري المحاولة ${i}/${maxRetries}...`, 'info');
+                    await new Promise(r => setTimeout(r, delay));
+                }
             }
         }
 
@@ -106,9 +113,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('device-os-info').innerText = stats.osName;
 
     } catch (err) {
-        logDebug(`Initialization Failed: ${err.message}`, 'error');
-        ui.showToast('فشل الاتصال بالسيرفر. تأكد من جودة الإنترنت.', 'error');
-        ui.setConnectionStatus(false, 'خطأ في الاتصال');
+        logDebug(`Initialization: ${err.message} - continuing in offline mode`, 'warn');
+        // Generate local ID if server unreachable (fallback)
+        if (!state.deviceId) {
+            state.deviceId = await window.dsdesk.getDeviceId();
+        }
+        if (!state.password) {
+            state.password = await window.dsdesk.getPassword();
+        }
+        ui.setConnectionStatus(false, 'محلي (غير متصل)');
+        ui.showToast('الاتصال غير متاح. يعمل في الوضع المحلي.', 'warning');
     }
 
     // ── 4. Signaling Event Handlers ──
@@ -597,6 +611,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
+    // Settings Button - Home Page
+    document.getElementById('btn-settings-home')?.addEventListener('click', () => {
+        document.getElementById('setting-device-id').textContent = state.deviceId;
+        document.getElementById('settings-modal')?.classList.remove('hidden');
+    });
+
     // Settings Modal - PRO MAX
     document.getElementById('btn-settings')?.addEventListener('click', () => {
         // Load current settings
