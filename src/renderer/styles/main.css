@@ -184,10 +184,20 @@ body {
   margin: 0 auto;
 }
 
-.panel-left, .panel-center, .panel-right {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.dash-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.badge-installed {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 /* Start Session Card */

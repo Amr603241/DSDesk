@@ -7,8 +7,9 @@ contextBridge.exposeInMainWorld('dsdesk', {
   refreshPassword: () => ipcRenderer.invoke('refresh-password'),
   getPasswordEnabled: () => ipcRenderer.invoke('get-password-enabled'),
   setPasswordEnabled: (enabled) => ipcRenderer.invoke('set-password-enabled', enabled),
-  getSystemStats: () => ipcRenderer.invoke('get-system-stats'),
-  isAdmin: () => ipcRenderer.invoke('is-admin'),
+   getSystemStats: () => ipcRenderer.invoke('get-system-stats'),
+   getHostname: () => ipcRenderer.invoke('get-hostname'),
+   isAdmin: () => ipcRenderer.invoke('is-admin'),
 
   // ── Remote Controls ──
   reboot: () => ipcRenderer.invoke('sys-reboot'),

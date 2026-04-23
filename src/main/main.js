@@ -100,6 +100,7 @@ function createWindow() {
 
 // ── IPC Handlers ──
 ipcMain.handle('get-device-id', () => getDeviceId());
+ipcMain.handle('get-hostname', () => si.osInfo().then(os => os.hostname));
 
 ipcMain.handle('is-admin', async () => {
     return new Promise((resolve) => {
