@@ -311,6 +311,19 @@ class WebRTCManager {
     this.remoteStream = null;
   }
 
+  getStats() {
+    // Return simulated stats for now, in a real env this uses peerConnection.getStats()
+    return {
+      latency: Math.floor(Math.random() * 50) + 10,
+      fps: this.fps,
+      bandwidth: (this.bitrate / 1000000).toFixed(1)
+    };
+  }
+
+  closeConnection() {
+    this.close();
+  }
+
   on(event, handler) {
     if (!this.handlers[event]) this.handlers[event] = [];
     this.handlers[event].push(handler);
