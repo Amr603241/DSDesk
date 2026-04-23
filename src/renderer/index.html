@@ -3,363 +3,146 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DSDesk PRO MAX - Ultimate Remote Intelligence</title>
+  <title>DSDesk PRO MAX</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-  <!-- ═══════════════ Custom Titlebar ═══════════════ -->
-  <header class="titlebar" id="titlebar">
-    <div class="titlebar-logo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" stroke-width="2">
-        <defs>
-          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#4DA3FF"/>
-            <stop offset="100%" style="stop-color:#2EE59D"/>
-          </linearGradient>
-        </defs>
-        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
-      </svg>
-      <span class="gradient-text" style="font-size: 14px; letter-spacing: 0.5px;">DSDESK PRO MAX</span>
-      <span id="badge-installed" class="badge-installed hidden" style="font-size: 10px; background: rgba(46, 229, 157, 0.1); color: var(--secondary); padding: 2px 6px; border-radius: 10px; margin-right: 8px;">INSTALLED</span>
-    </div>
-    <div class="titlebar-controls">
-      <button id="btn-minimize" class="titlebar-btn"><i class="fas fa-minus"></i></button>
-      <button id="btn-maximize" class="titlebar-btn"><i class="fas fa-expand"></i></button>
-      <button id="btn-close" class="titlebar-btn close"><i class="fas fa-times"></i></button>
-    </div>
-  </header>
-
-  <main class="app-container">
-
-    <!-- ─────────── DASHBOARD VIEW ─────────── -->
-    <section class="view active" id="view-home">
-      <div class="dashboard">
-        
-        <!-- Panel Left: My Identity -->
-        <div class="panel-left">
-          <div class="hero-card glass" style="padding: 24px;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-              <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(77, 163, 255, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary);">
-                <i class="fas fa-desktop" style="font-size: 20px;"></i>
-              </div>
-              <div>
-                <h3 style="font-size: 14px; color: var(--text-muted);">هذا الجهاز</h3>
-                <h2 id="device-hostname" style="font-size: 16px;">PC-DESKTOP-CORE</h2>
-              </div>
-            </div>
-
-            <div class="id-display-box" style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-subtle);">
-              <span class="id-value" id="device-id" style="font-size: 24px; letter-spacing: 2px;">--- --- ---</span>
-              <button id="btn-copy-id" class="tool-btn" style="background: var(--primary); color: white;"><i class="far fa-copy"></i></button>
-            </div>
-
-            <div style="margin-top: 20px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span class="text-dim" style="font-size: 12px;">كلمة المرور</span>
-                <div style="display: flex; gap: 8px;">
-                  <button id="btn-toggle-pwd" class="tool-btn" style="width: 24px; height: 24px; font-size: 10px;"><i class="far fa-eye"></i></button>
-                  <button id="btn-refresh-pwd" class="tool-btn" style="width: 24px; height: 24px; font-size: 10px;"><i class="fas fa-sync"></i></button>
-                </div>
-              </div>
-              <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-sm); font-family: monospace; text-align: center; font-size: 18px; border: 1px solid var(--border-subtle);">
-                <span id="device-password">••••••</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass" style="padding: 20px; border-radius: var(--radius-md);">
-            <h3 style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">إجراءات سريعة</h3>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button id="btn-generate-link" class="btn-start-session" style="background: rgba(77, 163, 255, 0.1); color: var(--primary); border: 1px solid rgba(77, 163, 255, 0.2); font-size: 13px; padding: 12px;">
-                <i class="fas fa-link"></i> إنشاء رابط آمن
-              </button>
-              <button id="btn-settings-home" class="btn-start-session" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); font-size: 13px; padding: 12px;">
-                <i class="fas fa-cog"></i> الإعدادات المتقدمة
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Panel Center: Main Connection -->
-        <div class="panel-center">
-          <div class="hero-card glass-active" style="padding: 40px; background: radial-gradient(circle at top right, rgba(77, 163, 255, 0.1), transparent);">
-            <div style="text-align: center; margin-bottom: 32px;">
-              <h1 class="gradient-text" style="font-size: 36px; margin-bottom: 8px;">اتصال ذكي</h1>
-              <p class="text-dim">تحكم بأي جهاز عن بعد بسرعة البرق</p>
-            </div>
-            
-            <div style="position: relative;">
-              <input type="text" id="remote-id" class="input-session-id" placeholder="000 000 000" style="padding: 24px; font-size: 28px;">
-              <i class="fas fa-search" style="position: absolute; left: 24px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 20px;"></i>
-            </div>
-            
-            <button id="btn-connect" class="btn-start-session" style="margin-top: 24px; padding: 20px; font-size: 18px;">
-              <i class="fas fa-bolt"></i>
-              <span>Turbo Connection</span>
-            </button>
-          </div>
-
-          <div class="glass" style="padding: 24px; border-radius: var(--radius-lg); flex: 1; display: flex; flex-direction: column;">
-            <div class="recent-header" style="margin-bottom: 16px;">
-              <h3>الأجهزة الأخيرة</h3>
-              <button id="btn-clear-recent" class="tool-btn" style="font-size: 11px; color: var(--danger);"><i class="fas fa-trash"></i> مسح</button>
-            </div>
-            <div class="recent-list" id="recent-list" style="flex: 1; overflow-y: auto;">
-              <!-- JS Injected -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Panel Right: System Status -->
-        <div class="panel-right">
-          <div class="glass" style="padding: 20px; border-radius: var(--radius-md);">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-              <i class="fas fa-shield-halved" style="color: var(--secondary);"></i>
-              <h3>Security Center</h3>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-              <div class="recent-item" style="cursor: default; padding: 10px; background: rgba(46, 229, 157, 0.05);">
-                <i class="fas fa-lock" style="color: var(--secondary);"></i>
-                <div style="font-size: 12px; flex: 1;">تشفير AES-256 GCM نشط</div>
-              </div>
-              <div class="recent-item" style="cursor: default; padding: 10px; background: rgba(77, 163, 255, 0.05);">
-                <i class="fas fa-fingerprint" style="color: var(--primary);"></i>
-                <div style="font-size: 12px; flex: 1;">نظام الحماية Sentinel v4.1</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass" style="padding: 20px; border-radius: var(--radius-md); flex: 1;">
-            <h3>حالة الشبكة</h3>
-            <div id="status-badge" style="margin-top: 16px; padding: 16px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="device-status status-offline"></span>
-                <span id="status-text" class="text-muted" style="font-size: 13px;">جاري فحص الاتصال...</span>
-              </div>
-              <div style="height: 1px; background: var(--border-subtle);"></div>
-              <div style="font-size: 11px; color: var(--text-dim);">
-                <span>السيرفر:</span>
-                <span id="server-url-display" style="color: var(--primary); margin-right: 4px;">--</span>
-              </div>
-            </div>
-            
-            <div style="margin-top: 24px;">
-              <h3>أداء النظام</h3>
-              <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 16px;">
-                <div>
-                  <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
-                    <span class="text-dim">CPU Usage</span>
-                    <span id="dash-cpu-text">0%</span>
-                  </div>
-                  <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;">
-                    <div id="dash-cpu-bar" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.5s;"></div>
-                  </div>
-                </div>
-                <div>
-                  <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
-                    <span class="text-dim">RAM Usage</span>
-                    <span id="dash-ram-text">0%</span>
-                  </div>
-                  <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;">
-                    <div id="dash-ram-bar" style="width: 0%; height: 100%; background: var(--secondary); transition: width 0.5s;"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+  <!-- ═══════════════ Unified Sidebar ═══════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="brand">
+        <div class="brand-logo"><i class="fas fa-bolt"></i></div>
       </div>
-    </section>
+      <nav class="nav-menu">
+        <button class="nav-btn active" data-view="home"><i class="fas fa-th-large"></i><span>الرئيسية</span></button>
+        <button class="nav-btn" data-view="remote"><i class="fas fa-desktop"></i><span>التحكم</span></button>
+        <button class="nav-btn" data-view="files"><i class="fas fa-folder-open"></i><span>الملفات</span></button>
+        <button class="nav-btn" data-view="security"><i class="fas fa-shield-halved"></i><span>الأمان</span></button>
+      </nav>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="nav-btn" id="btn-settings-side"><i class="fas fa-cog"></i><span>الإعدادات</span></button>
+      <div class="user-status">
+        <span class="status-dot status-offline" id="global-status-dot"></span>
+        <span id="global-status-text">OFFLINE</span>
+      </div>
+    </div>
+  </aside>
 
-    <!-- ─────────── REMOTE SESSION VIEW ─────────── -->
-    <section class="view" id="view-session">
-      <div class="remote-view">
-        <div class="remote-canvas-container">
+  <!-- ═══════════════ Main Workspace ═══════════════ -->
+  <main class="workspace">
+    
+    <!-- Custom Titlebar (Integrated) -->
+    <header class="header">
+      <div class="header-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="remote-id" placeholder="أدخل ID الجهاز البعيد...">
+        <button id="btn-connect" class="btn-turbo">اتصال سريع</button>
+      </div>
+      <div class="window-controls">
+        <button id="btn-minimize"><i class="fas fa-minus"></i></button>
+        <button id="btn-maximize"><i class="fas fa-expand"></i></button>
+        <button id="btn-close"><i class="fas fa-times"></i></button>
+      </div>
+    </header>
+
+    <div class="content-area">
+      
+      <!-- DASHBOARD VIEW -->
+      <section class="view active" id="view-home">
+        <div class="welcome-banner">
+          <h1>مرحباً بك في <span class="gradient-text">DSDesk Pro Max</span></h1>
+          <p>نظام التحكم عن بعد الأكثر ذكاءً وأماناً.</p>
+        </div>
+
+        <div class="grid-layout">
+          <!-- Identity Card -->
+          <div class="glass-card identity-card">
+            <div class="card-label">هويتك الرقمية</div>
+            <div class="id-value-large" id="device-id">--- --- ---</div>
+            <div class="pwd-section">
+              <span class="text-dim">كلمة المرور:</span>
+              <span id="device-password" class="pwd-value">••••••</span>
+              <div class="pwd-actions">
+                <button id="btn-toggle-pwd"><i class="far fa-eye"></i></button>
+                <button id="btn-refresh-pwd"><i class="fas fa-sync"></i></button>
+              </div>
+            </div>
+            <button id="btn-copy-id" class="btn-outline-primary"><i class="far fa-copy"></i> نسخ المعرّف</button>
+          </div>
+
+          <!-- Performance Card -->
+          <div class="glass-card stats-card">
+            <div class="card-label">أداء النظام</div>
+            <div class="stat-row">
+              <div class="stat-info">
+                <span>المعالج (CPU)</span>
+                <span id="dash-cpu-text">0%</span>
+              </div>
+              <div class="progress-bg"><div id="dash-cpu-bar" class="progress-fill primary"></div></div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-info">
+                <span>الذاكرة (RAM)</span>
+                <span id="dash-ram-text">0%</span>
+              </div>
+              <div class="progress-bg"><div id="dash-ram-bar" class="progress-fill secondary"></div></div>
+            </div>
+          </div>
+
+          <!-- Recent Connections -->
+          <div class="glass-card recent-connections">
+            <div class="card-label">الاتصالات الأخيرة</div>
+            <div class="recent-list" id="recent-list">
+              <div class="empty-state">لا توجد اتصالات حديثة</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SESSION VIEW (Full screen overlay) -->
+      <section class="view" id="view-session">
+        <div class="remote-viewport">
           <video id="remote-video" autoplay muted playsinline></video>
           
-          <div class="perf-overlay glass" style="background: rgba(15, 17, 21, 0.6); backdrop-filter: blur(10px); border: 1px solid var(--border-subtle);">
-            <div class="perf-stat"><i class="fas fa-signal" style="margin-left: 6px;"></i> <span id="stat-latency">--ms</span></div>
-            <div class="perf-stat"><i class="fas fa-bolt" style="margin-left: 6px;"></i> <span id="stat-fps">--</span> FPS</div>
-            <div class="perf-stat"><i class="fas fa-download" style="margin-left: 6px;"></i> <span id="stat-bandwidth">-- Mbps</span></div>
+          <!-- Floating Toolset -->
+          <div class="floating-toolbar">
+            <button class="tool-btn" id="btn-files-toggle" title="الملفات"><i class="fas fa-folder-open"></i></button>
+            <button class="tool-btn" id="btn-tasks-toggle" title="المهام"><i class="fas fa-tasks"></i></button>
+            <button class="tool-btn" id="btn-chat-toggle" title="المحادثة"><i class="fas fa-comments"></i></button>
+            <div class="tool-sep"></div>
+            <button class="tool-btn disconnect" id="btn-disconnect" title="إنهاء"><i class="fas fa-power-off"></i></button>
+          </div>
+
+          <!-- Performance HUD -->
+          <div class="hud-stats">
+            <div class="hud-item"><span>Latency:</span> <span id="stat-latency">--ms</span></div>
+            <div class="hud-item"><span>FPS:</span> <span id="stat-fps">--</span></div>
           </div>
         </div>
+      </section>
 
-        <div class="toolbar-v glass" style="padding: 10px;">
-          <button class="tool-btn tooltip" data-tooltip="نقل الملفات" id="btn-files-toggle"><i class="fas fa-file-export"></i></button>
-          <button class="tool-btn tooltip" data-tooltip="مدير المهام" id="btn-tasks-toggle"><i class="fas fa-tasks"></i></button>
-          <button class="tool-btn tooltip" data-tooltip="الطرفية (Terminal)" id="btn-terminal-toggle"><i class="fas fa-terminal"></i></button>
-          <button class="tool-btn tooltip" data-tooltip="المحادثة" id="btn-chat-toggle"><i class="fas fa-comments"></i></button>
-          <div style="height: 1px; background: var(--border-subtle); margin: 8px 0;"></div>
-          <button class="tool-btn tooltip" data-tooltip="لقطة شاشة" id="btn-screenshot"><i class="fas fa-camera"></i></button>
-          <button class="tool-btn tooltip" data-tooltip="خيارات الطاقة" id="btn-power-remote"><i class="fas fa-power-off"></i></button>
-          <button class="tool-btn tooltip" data-tooltip="الإعدادات" id="btn-settings-remote"><i class="fas fa-cog"></i></button>
-          <div style="height: 1px; background: var(--border-subtle); margin: 8px 0;"></div>
-          <button class="tool-btn disconnect tooltip" data-tooltip="قطع الاتصال" id="btn-disconnect"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="ai-panel glass" id="ai-panel" style="display: none;">
-          <div class="ai-header"><i class="fas fa-brain"></i> <span>AI CO-PILOT</span></div>
-          <div class="ai-suggestion" id="ai-suggestion"></div>
-          <button class="btn-ai-action" id="btn-ai-optimize">Optimize Now</button>
-        </div>
-      </div>
-
-      <div class="modal-overlay" id="connecting-overlay">
-        <div class="modal-box glass" style="text-align: center; max-width: 300px;">
-          <div class="spinner" style="width: 48px; height: 48px; border: 3px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 24px;"></div>
-          <h2 id="connecting-status" style="font-size: 16px;">جاري إنشاء الاتصال...</h2>
-          <p class="text-dim" style="font-size: 12px; margin-top: 8px;">تأمين نفق P2P مشفر</p>
-        </div>
-      </div>
-    </section>
-
+    </div>
   </main>
 
-  <!-- ═══════════════ COMPLETE MODALS SYSTEM ═══════════════ -->
-
-  <!-- Settings Modal (Redesigned & Functional) -->
-  <div class="modal-overlay" id="settings-modal">
-    <div class="modal-box glass settings-container" style="background: var(--bg-card); padding: 0;">
-      <div class="settings-nav">
-        <div class="nav-item active" data-tab="general"><i class="fas fa-cog"></i> عام</div>
-        <div class="nav-item" data-tab="performance"><i class="fas fa-tachometer-alt"></i> الأداء</div>
-        <div class="nav-item" data-tab="security"><i class="fas fa-shield-alt"></i> الأمان</div>
-        <div class="nav-item" data-tab="connection"><i class="fas fa-network-wired"></i> الاتصال</div>
-        <div class="nav-item" data-tab="advanced"><i class="fas fa-flask"></i> ميزات تجريبية</div>
-      </div>
-      <div class="settings-content">
-        
-        <!-- Tab: General -->
-        <div class="tab-content" id="tab-general" style="display: block;">
-          <h2>الإعدادات العامة</h2>
-          <div class="setting-item" style="margin-top: 24px;">
-            <label class="text-muted">اسم الجهاز (Nickname)</label>
-            <input type="text" id="setting-device-name" class="input-session-id" style="font-size: 14px; text-align: right; margin-top: 8px; padding: 12px;">
-          </div>
-          <div class="setting-item" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <div style="font-size: 14px;">بدء التشغيل تلقائياً</div>
-              <div class="text-dim" style="font-size: 11px;">فتح البرنامج عند بدء تشغيل ويندوز</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="setting-autostart">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-item" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <div style="font-size: 14px;">التصغير إلى صينية النظام (System Tray)</div>
-              <div class="text-dim" style="font-size: 11px;">إبقاء البرنامج يعمل في الخلفية</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="setting-background" checked>
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Tab: Performance -->
-        <div class="tab-content" id="tab-performance" style="display: none;">
-          <h2>تحسين الأداء</h2>
-          <div class="setting-item" style="margin-top: 24px;">
-            <label class="text-muted">وضع الجودة (Quality Mode)</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px;">
-              <button class="preset-btn" data-preset="fast">أداء سريع</button>
-              <button class="preset-btn active" data-preset="balanced">متوازن</button>
-              <button class="preset-btn" data-preset="ultra">جودة فائقة</button>
-            </div>
-          </div>
-          <div class="setting-item" style="margin-top: 24px;">
-            <label class="text-muted">معدل الإطارات الأقصى (FPS): <span id="val-fps">60</span></label>
-            <input type="range" id="setting-fps" min="30" max="120" step="30" value="60" style="width: 100%; margin-top: 8px;">
-          </div>
-          <div class="setting-item" style="margin-top: 24px;">
-            <label class="text-muted">معدل البث (Bitrate): <span id="val-bitrate">15</span> Mbps</label>
-            <input type="range" id="setting-bitrate" min="2" max="50" step="2" value="15" style="width: 100%; margin-top: 8px;">
-          </div>
-        </div>
-
-        <!-- Tab: Security -->
-        <div class="tab-content" id="tab-security" style="display: none;">
-          <h2>إعدادات الأمان</h2>
-          <div class="setting-item" style="margin-top: 24px;">
-            <label class="text-muted">كلمة المرور الثابتة</label>
-            <div style="position: relative; margin-top: 8px;">
-              <input type="password" id="setting-password" class="input-session-id" style="font-size: 14px; padding: 12px;" placeholder="اتركها فارغة للتوليد التلقائي">
-            </div>
-          </div>
-          <div class="setting-item" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <div style="font-size: 14px;">تفعيل التحقق بخطوتين (2FA)</div>
-              <div class="text-dim" style="font-size: 11px;">يتطلب موافقة يدوية حتى مع وجود كلمة المرور</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="setting-2fa">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Tab: Connection -->
-        <div class="tab-content" id="tab-connection" style="display: none;">
-          <h2>إعدادات الاتصال</h2>
-          <div class="setting-item" style="margin-top: 24px;">
-            <label class="text-muted">خادم الإشارات (Signaling Server)</label>
-            <input type="text" id="setting-server" class="input-session-id" style="font-size: 14px; margin-top: 8px; padding: 12px;" value="http://localhost:8080">
-          </div>
-          <div class="setting-item" style="margin-top: 20px;">
-            <label class="text-muted">خادم TURN (لتجاوز الجدران النارية)</label>
-            <input type="text" id="setting-turn" class="input-session-id" style="font-size: 14px; margin-top: 8px; padding: 12px;" placeholder="turn:your-server.com:3478">
-          </div>
-        </div>
-
-      </div>
-      <div style="padding: 20px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: flex-end; gap: 12px; background: rgba(0,0,0,0.2);">
-        <button id="btn-close-settings" class="tool-btn" style="width: auto; padding: 0 20px; font-size: 13px;">إلغاء</button>
-        <button id="btn-save-settings" class="btn-start-session" style="width: auto; padding: 0 32px; font-size: 13px; height: 36px;">حفظ التغييرات</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Terminal Modal -->
-  <div class="modal-overlay" id="terminal-modal">
-    <div class="modal-box glass" style="width: 800px; max-width: 90vw; height: 500px; display: flex; flex-direction: column; padding: 0;">
-      <div style="padding: 12px 20px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 10px;"><i class="fas fa-terminal"></i> <span>الطرفية البعيدة (Remote Terminal)</span></div>
-        <button onclick="document.getElementById('terminal-modal').classList.remove('active')" class="tool-btn"><i class="fas fa-times"></i></button>
-      </div>
-      <div id="terminal-output" style="flex: 1; background: #000; color: #00ff00; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px; overflow-y: auto;">
-        <div>DSDESK Term v4.1 Initialized...</div>
-        <div>Connected to remote shell.</div>
-      </div>
-      <div style="padding: 10px; background: #111; display: flex; align-items: center; gap: 10px;">
-        <span style="color: #00ff00;">></span>
-        <input type="text" id="terminal-input" style="flex: 1; background: transparent; border: none; color: white; outline: none; font-family: 'JetBrains Mono';">
+  <!-- Modals -->
+  <div class="modal-overlay" id="modal-request">
+    <div class="modal glass">
+      <h3>طلب اتصال وارد</h3>
+      <p>الجهاز <strong id="request-from-id">---</strong> يطلب التحكم بك.</p>
+      <div class="modal-actions">
+        <button id="btn-accept" class="btn-primary">قبول</button>
+        <button id="btn-reject" class="btn-secondary">رفض</button>
       </div>
     </div>
   </div>
 
   <div id="toast-container"></div>
-
-  <style>
-    /* Professional Switch Component */
-    .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 20px; }
-    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-    input:checked + .slider { background-color: var(--primary); }
-    input:checked + .slider:before { transform: translateX(16px); }
-
-    .preset-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-dim); padding: 8px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: 0.2s; }
-    .preset-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(77, 163, 255, 0.1); }
-    .preset-btn:hover:not(.active) { background: rgba(255,255,255,0.08); }
-  </style>
 
   <script src="js/ui.js"></script>
   <script src="js/signaling.js"></script>
