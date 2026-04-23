@@ -1,13 +1,15 @@
 /**
- * DSDesk PRO MAX Application - CORE REPAIR v4.4
- * Fixed all signaling mismatches and initialization sequences
+ * DSDesk PRO MAX Application - CORE STABILIZER v4.5
+ * Fixed Port, Fixed Socket.io, Fixed Initialization
  */
 
-const DEFAULT_SERVER = 'http://localhost:8080';
+const DEFAULT_SERVER = 'http://localhost:10000'; // Changed to 10000 based on user server logs
 
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('[APP] Starting DSDesk Pro Max...');
     const ui = new UIManager();
     const webrtc = new WebRTCManager();
+    
     let state = {
         deviceId: '',
         isHost: false,
@@ -17,27 +19,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         settings: JSON.parse(localStorage.getItem('dsdesk_settings') || '{}')
     };
 
-    const serverUrl = state.settings.server || DEFAULT_SERVER;
-    const signaling = new SignalingClient(serverUrl);
-
-    // ── 1. App Startup ──
+    // ── 1. Load Device Info (CRITICAL: Must work even if offline) ──
     try {
         state.deviceId = await window.dsdesk.getDeviceId();
         const pwd = await window.dsdesk.getPassword();
+        console.log('[APP] Device Info Loaded:', state.deviceId);
         ui.updateDeviceInfo(state.deviceId, pwd);
         ui.renderRecentList(state.recentConnections, state.nicknames, (id) => {
             document.getElementById('remote-id').value = id;
             document.getElementById('btn-connect').click();
         });
-
-        await signaling.connect(state.deviceId, pwd);
-        ui.setConnectionStatus(true);
     } catch (e) {
-        console.error('[CRITICAL] Startup failed:', e);
-        ui.showToast('فشل الاتصال بسيرفر الإشارات', 'error');
+        console.error('[APP] Failed to load device info:', e);
     }
 
-    // ── 2. Incoming Request Handling ──
+    // ── 2. Signaling Setup ──
+    const serverUrl = state.settings.server || DEFAULT_SERVER;
+    const signaling = new SignalingClient(serverUrl);
+
+    try {
+        console.log('[APP] Connecting to signaling server:', serverUrl);
+        await signaling.connect(state.deviceId, await window.dsdesk.getPassword());
+        ui.setConnectionStatus(true);
+        console.log('[APP] Signaling Connected');
+    } catch (e) {
+        console.warn('[APP] Signaling Connection Failed (Offline Mode):', e.message);
+        ui.setConnectionStatus(false);
+        ui.showToast('تعذر الاتصال بالسيرفر - يعمل في وضع الأوفلاين', 'info');
+    }
+
+    // ── 3. Event Listeners ──
     signaling.on('request', (data) => {
         ui.showRequestModal(data.from);
         state.incomingRequest = data;
@@ -45,12 +56,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('btn-accept').onclick = async () => {
         ui.hideRequestModal();
-        ui.showToast('جاري بدء مشاركة الشاشة...', 'info');
+        ui.showToast('جاري بدء المشاركة...', 'info');
         state.isHost = true;
-        
         await webrtc.initializeConnection(false, 'host');
         await webrtc.startScreenShare();
-        
         signaling.acceptRequest(state.incomingRequest.fromSocketId);
     };
 
@@ -59,34 +68,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         signaling.rejectRequest(state.incomingRequest.fromSocketId);
     };
 
-    // ── 3. Outgoing Connection Flow ──
     document.getElementById('btn-connect').onclick = () => {
         const id = document.getElementById('remote-id').value.trim();
         if (!id) return ui.showToast('يرجى إدخال ID', 'error');
-        ui.showToast('جاري البحث عن الجهاز...', 'info');
+        ui.showToast('جاري البحث...', 'info');
         signaling.sendRequest(id);
     };
 
     signaling.on('accepted', async (data) => {
         state.isHost = false;
         state.currentRemoteSocketId = data.hostSocketId;
-        ui.showToast('تم القبول. جاري ربط الفيديو...', 'success');
-        
+        ui.showToast('تم القبول. جاري الربط...', 'success');
         await webrtc.initializeConnection(true, 'viewer');
-        const offer = await webrtc.createOffer();
-        signaling.sendOffer(data.hostSocketId, offer);
+        signaling.sendOffer(data.hostSocketId, await webrtc.createOffer());
     });
 
-    signaling.on('rejected', () => {
-        ui.showToast('تم رفض الاتصال من الطرف الآخر', 'error');
-    });
-
-    // ── 4. WebRTC Signaling ──
     signaling.on('offer', async (data) => {
         state.currentRemoteSocketId = data.from;
         if (!webrtc.peerConnection) await webrtc.initializeConnection(false, 'host');
-        const answer = await webrtc.handleOffer(data.offer);
-        signaling.sendAnswer(data.from, answer);
+        signaling.sendAnswer(data.from, await webrtc.handleOffer(data.offer));
     });
 
     signaling.on('answer', async (data) => {
@@ -95,32 +95,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.statsInterval = setInterval(() => ui.updateStats(webrtc.getStats()), 2000);
     });
 
-    signaling.on('ice-candidate', (data) => {
-        webrtc.addIceCandidate(data.candidate);
-    });
-
-    webrtc.on('ice-candidate', (c) => {
-        const target = state.currentRemoteSocketId || state.incomingRequest?.fromSocketId;
-        if (target) signaling.sendIceCandidate(target, c);
-    });
-
-    webrtc.on('stream', (stream) => {
-        const video = document.getElementById('remote-video');
-        if (video) video.srcObject = stream;
-    });
+    signaling.on('ice-candidate', (data) => webrtc.addIceCandidate(data.candidate));
+    webrtc.on('ice-candidate', (c) => signaling.sendIceCandidate(state.currentRemoteSocketId || state.incomingRequest?.fromSocketId, c));
+    webrtc.on('stream', (s) => { document.getElementById('remote-video').srcObject = s; });
 
     webrtc.on('control-data', (data) => {
         if (state.isHost) window.dsdesk.simulateInput(data);
         if (data.type === 'chat') ui.addChatMessage(data.message, 'received');
     });
 
-    // ── 5. Features ──
+    // ── 4. UI Actions ──
     document.getElementById('btn-chat-send').onclick = () => {
         const input = document.getElementById('chat-input');
-        const text = input.value.trim();
-        if (text) {
-            webrtc.sendControlData({ type: 'chat', message: text });
-            ui.addChatMessage(text, 'sent');
+        if (input.value.trim()) {
+            webrtc.sendControlData({ type: 'chat', message: input.value });
+            ui.addChatMessage(input.value, 'sent');
             input.value = '';
         }
     };
@@ -129,14 +118,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const target = state.currentRemoteSocketId || state.incomingRequest?.fromSocketId;
         if (target) signaling.endSession(target);
         webrtc.closeConnection();
-        clearInterval(state.statsInterval);
-        ui.switchView('home');
+        if (state.statsInterval) clearInterval(state.statsInterval);
+        ui.switchInternalView('home');
+        const termOut = document.getElementById('terminal-output');
+        if (termOut) termOut.innerHTML = '';
         ui.showToast('انتهت الجلسة', 'info');
     };
 
-    // System Monitoring
-    setInterval(async () => {
-        const stats = await window.dsdesk.getSystemStats();
-        ui.updateDashboardPerformance(stats);
-    }, 2500);
+    // Performance Monitoring
+    setInterval(async () => ui.updateDashboardPerformance(await window.dsdesk.getSystemStats()), 2500);
 });
