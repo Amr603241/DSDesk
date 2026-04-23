@@ -1,6 +1,6 @@
 /**
- * DSDesk UI Manager
- * Handles DOM interactions, views switching, and toast notifications
+ * DSDesk UI Manager - PRO MAX Edition
+ * Handles modern SaaS interface logic and animations
  */
 
 class UIManager {
@@ -15,200 +15,147 @@ class UIManager {
       devicePassword: document.getElementById('device-password'),
       statusText: document.getElementById('status-text'),
       statusBadge: document.getElementById('status-badge'),
-      idDisplay: document.getElementById('id-display'),
-      passwordDisplay: document.querySelector('.password-display'),
-      passwordEnabled: document.getElementById('check-password-enabled'),
-      chatPanel: document.getElementById('chat-panel'),
-      chatMessages: document.getElementById('chat-messages'),
-      chatBadge: document.getElementById('chat-badge'),
-      toastContainer: document.getElementById('toast-container'),
+      recentList: document.getElementById('recent-list'),
+      remoteVideo: document.getElementById('remote-video'),
       connectingOverlay: document.getElementById('connecting-overlay'),
       connectingStatus: document.getElementById('connecting-status'),
-      remoteVideo: document.getElementById('remote-video'),
       modalRequest: document.getElementById('modal-request'),
       requestFromId: document.getElementById('request-from-id'),
-      sentinelItems: document.querySelectorAll('.sentinel-item'),
-      btnConnect: document.getElementById('btn-connect'),
-      connectForm: document.getElementById('connect-form')
+      toastContainer: document.getElementById('toast-container'),
+      latencyStat: document.getElementById('stat-latency'),
+      fpsStat: document.getElementById('stat-fps'),
+      bandwidthStat: document.getElementById('stat-bandwidth')
     };
 
     this._setupWindowControls();
-    this._setupSentinelToggles();
+    this._setupSettingsTabs();
+    this._setupInteractions();
   }
 
-  _setupSentinelToggles() {
-    this.elements.sentinelItems.forEach(item => {
-      item.onclick = () => {
-        item.classList.toggle('active');
-        // Vibrate or play subtle sound if needed for elite feel
-      };
+  _setupInteractions() {
+    // Add hover sound/glow effects here if desired
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        // Subtle haptic or glow logic
+      });
     });
   }
 
   _setupWindowControls() {
-    document.getElementById('btn-minimize').onclick = () => window.dsdesk.minimize();
-    document.getElementById('btn-maximize').onclick = () => window.dsdesk.maximize();
-    document.getElementById('btn-close').onclick = () => window.dsdesk.close();
+    const controls = {
+      'btn-minimize': () => window.dsdesk.minimize(),
+      'btn-maximize': () => window.dsdesk.maximize(),
+      'btn-close': () => window.dsdesk.close()
+    };
+
+    Object.entries(controls).forEach(([id, fn]) => {
+      const el = document.getElementById(id);
+      if (el) el.onclick = fn;
+    });
+  }
+
+  _setupSettingsTabs() {
+    const tabs = document.querySelectorAll('.nav-item');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.getAttribute('data-tab');
+        // Logic to show/hide setting sections
+        console.log('[UI] Switched to settings tab:', target);
+      });
+    });
   }
 
   switchView(viewName) {
+    console.log('[UI] Switching to view:', viewName);
     Object.keys(this.views).forEach(v => {
       const view = this.views[v];
       if (v === viewName) {
-          view.classList.add('active');
-          view.style.opacity = '0';
-          setTimeout(() => {
-              view.style.transition = 'opacity 0.4s ease-in-out';
-              view.style.opacity = '1';
-          }, 10);
+        view.classList.add('active');
       } else {
-          view.classList.remove('active');
-          view.style.opacity = '0';
+        view.classList.remove('active');
       }
     });
   }
 
-  setPasswordEnabled(enabled) {
-    if (this.elements.passwordEnabled) {
-      this.elements.passwordEnabled.checked = enabled;
-      this.elements.passwordDisplay.style.opacity = enabled ? '1' : '0.5';
-      this.elements.passwordDisplay.style.pointerEvents = enabled ? 'auto' : 'none';
-      this.elements.passwordDisplay.title = enabled ? '' : 'تم تعطيل كلمة المرور';
-    }
-  }
-
   updateDeviceInfo(id, password) {
-    if (id) {
-      // Format: 123 456 789
+    if (this.elements.deviceId && id) {
       const formattedId = id.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
       this.elements.deviceId.textContent = formattedId;
     }
-    if (password) {
+    if (this.elements.devicePassword && password) {
       this.elements.devicePassword.textContent = password;
     }
   }
 
   setConnectionStatus(connected, text) {
-    this.elements.statusBadge.classList.toggle('connected', connected);
-    this.elements.statusText.textContent = text || (connected ? 'متصل بالخادم' : 'غير متصل');
+    if (this.elements.statusBadge) {
+      const dot = this.elements.statusBadge.querySelector('.device-status');
+      if (dot) {
+        dot.className = connected ? 'device-status status-online' : 'device-status status-offline';
+      }
+    }
+    if (this.elements.statusText) {
+      this.elements.statusText.textContent = text || (connected ? 'متصل بالشبكة الذكية' : 'غير متصل');
+      this.elements.statusText.style.color = connected ? 'var(--secondary)' : 'var(--text-muted)';
+    }
   }
 
-  showToast(message, type = 'info', duration = 3000) {
+  updateStats(stats) {
+    if (this.elements.latencyStat) this.elements.latencyStat.textContent = `${stats.latency}ms`;
+    if (this.elements.fpsStat) this.elements.fpsStat.textContent = stats.fps;
+    if (this.elements.bandwidthStat) this.elements.bandwidthStat.textContent = `${stats.bandwidth} Mbps`;
+  }
+
+  showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.textContent = message;
-    this.elements.toastContainer.appendChild(toast);
-
-    setTimeout(() => {
-      toast.classList.add('out');
-      setTimeout(() => toast.remove(), 400);
-    }, duration);
-  }
-
-  showRequestModal(fromId, onAccept, onReject) {
-    this.elements.requestFromId.textContent = fromId;
-    this.elements.modalRequest.classList.remove('hidden');
-
-    const acceptBtn = document.getElementById('btn-accept');
-    const rejectBtn = document.getElementById('btn-reject');
-
-    const cleanup = () => {
-      this.elements.modalRequest.classList.add('hidden');
-      acceptBtn.onclick = null;
-      rejectBtn.onclick = null;
-    };
-
-    acceptBtn.onclick = () => { 
-        const trustChecked = document.getElementById('check-trust-device').checked;
-        
-        // Capture AnyDesk-style permissions
-        const permissions = {
-            allowMouse: document.getElementById('perm-mouse').classList.contains('active'),
-            allowKeyboard: document.getElementById('perm-keyboard').classList.contains('active'),
-            allowClipboard: document.getElementById('perm-clipboard').classList.contains('active'),
-            allowFiles: document.getElementById('perm-files').classList.contains('active')
-        };
-
-        onAccept(trustChecked, permissions); 
-        cleanup(); 
-    };
-    rejectBtn.onclick = () => { onReject(); cleanup(); };
-  }
-
-  setConnectingOverlay(visible, statusText = '') {
-    this.elements.connectingOverlay.classList.toggle('hidden', !visible);
-    if (statusText) this.elements.connectingStatus.textContent = statusText;
-  }
-
-  appendChatMessage(message, time, isSelf = false) {
-    const empty = this.elements.chatMessages.querySelector('.chat-empty');
-    if (empty) empty.remove();
-
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `chat-msg ${isSelf ? 'self' : 'remote'}`;
-    msgDiv.innerHTML = `
-      <p>${message}</p>
-      <span class="msg-time">${time}</span>
-    `;
-
-    this.elements.chatMessages.appendChild(msgDiv);
-    this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
-
-    if (!isSelf && this.elements.chatPanel.classList.contains('hidden')) {
-      const currentCount = parseInt(this.elements.chatBadge.textContent || '0');
-      this.elements.chatBadge.textContent = currentCount + 1;
-      this.elements.chatBadge.classList.remove('hidden');
-    }
-  }
-
-  displayRemoteVideo(stream) {
-    this.elements.remoteVideo.srcObject = stream;
-    this.elements.remoteVideo.play().catch(e => console.error("[UI] Video Play Error:", e));
-  }
-
-  // AnyDesk-Elite: Address Book Rendering
-  renderRecent(recentList, nicknames = {}) {
-    const container = document.getElementById('recent-list');
-    if (!container) return;
     
-    if (!recentList || recentList.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <p>لا توجد اتصالات سابقة</p>
-        </div>
-      `;
-      return;
-    }
+    const icon = type === 'success' ? 'fa-check-circle' : 
+                 type === 'error' ? 'fa-exclamation-triangle' : 
+                 type === 'warning' ? 'fa-info-circle' : 'fa-bell';
+                 
+    toast.innerHTML = `
+      <i class="fas ${icon}"></i>
+      <span>${message}</span>
+    `;
+    
+    this.elements.toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-20px)';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
 
-    container.innerHTML = '';
-    recentList.forEach(id => {
-      const nickname = nicknames[id] || `جهاز ${id}`;
-      const item = document.createElement('div');
-      item.className = 'recent-item glass';
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'space-between';
-      item.style.padding = '12px 16px';
-      item.style.marginBottom = '8px';
-      item.style.borderRadius = 'var(--radius-md)';
-      
-      item.innerHTML = `
-        <div class="recent-info">
-          <div class="recent-nickname" style="font-weight:700; font-size:14px;">${nickname}</div>
-          <div class="recent-id-sub" style="font-family:var(--font-mono); font-size:11px; opacity:0.6;">${id}</div>
-        </div>
-        <div style="display:flex; gap:5px;">
-           <button class="btn-icon btn-rename-device" data-id="${id}" title="تغيير الاسم">
-             <i class="fas fa-edit"></i>
-           </button>
-           <button class="btn-icon btn-quick-connect" data-id="${id}" title="اتصال سريع" style="color:var(--accent);">
-             <i class="fas fa-arrow-left"></i>
-           </button>
-        </div>
-      `;
-      container.appendChild(item);
-    });
+  showRequestModal(fromId) {
+    if (this.elements.modalRequest) {
+      this.elements.requestFromId.textContent = fromId;
+      this.elements.modalRequest.classList.add('active');
+    }
+  }
+
+  hideRequestModal() {
+    if (this.elements.modalRequest) {
+      this.elements.modalRequest.classList.remove('active');
+    }
+  }
+
+  showConnecting(statusText) {
+    if (this.elements.connectingOverlay) {
+      this.elements.connectingStatus.textContent = statusText || 'جاري إنشاء الاتصال...';
+      this.elements.connectingOverlay.style.display = 'flex';
+      this.elements.connectingOverlay.classList.add('active');
+    }
+  }
+
+  hideConnecting() {
+    if (this.elements.connectingOverlay) {
+      this.elements.connectingOverlay.style.display = 'none';
+      this.elements.connectingOverlay.classList.remove('active');
+    }
   }
 }
 

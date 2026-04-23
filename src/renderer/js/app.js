@@ -458,8 +458,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Window Controls
-    document.getElementById('btn-disconnect').onclick = () => endSession();
-    
+    const btnDisconnect = document.getElementById('btn-disconnect');
+    if (btnDisconnect) {
+        btnDisconnect.onclick = () => {
+            ui.showToast('جاري إنهاء الجلسة...', 'info');
+            endSession();
+        };
+    }
+
+    // AI Optimize button
+    document.getElementById('btn-ai-optimize')?.addEventListener('click', () => {
+        ui.showToast('جاري تحسين مسار الاتصال...', 'success');
+        // Simulate AI action: Switch to faster transport or lower quality
+        if (webrtc) {
+            webrtc.setQualityPreset('fast');
+            ui.showToast('تم التحويل إلى نمط الأداء العالي', 'success');
+        }
+        document.getElementById('ai-panel')?.classList.add('hidden');
+    });
+
     function endSession() {
         logDebug('Ending session...');
         if (state.currentRemoteSocketId) signaling.endSession(state.currentRemoteSocketId);
@@ -643,10 +660,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // Settings Button - Home Page
+    // Settings Buttons
     document.getElementById('btn-settings-home')?.addEventListener('click', () => {
-        document.getElementById('setting-device-id').textContent = state.deviceId;
-        document.getElementById('settings-modal')?.classList.remove('hidden');
+        document.getElementById('settings-modal')?.classList.add('active');
+    });
+    document.getElementById('btn-settings-remote')?.addEventListener('click', () => {
+        document.getElementById('settings-modal')?.classList.add('active');
+    });
+
+    // Close Modals
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.classList.remove('active');
+        });
     });
 
     // Refresh Button

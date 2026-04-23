@@ -3,864 +3,312 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DSDesk PRO MAX - Remote Desktop</title>
+  <title>DSDesk PRO MAX - Ultimate Remote Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
   <!-- ═══════════════ Custom Titlebar ═══════════════ -->
   <header class="titlebar" id="titlebar">
-    <div class="titlebar-drag">
-      <div class="titlebar-logo">
-        <svg class="logo-svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <defs>
-            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#8b5cf6"/>
-              <stop offset="100%" style="stop-color:#06b6d4"/>
-            </linearGradient>
-          </defs>
-          <rect x="2" y="2" width="24" height="24" rx="6" fill="url(#logoGrad)" opacity="0.15"/>
-          <rect x="4" y="4" width="20" height="14" rx="3" stroke="url(#logoGrad)" stroke-width="2" fill="none"/>
-          <line x1="14" y1="18" x2="14" y2="22" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
-          <line x1="9" y1="22" x2="19" y2="22" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="14" cy="11" r="2" fill="url(#logoGrad)"/>
-          <path d="M10 15 Q14 8 18 15" stroke="url(#logoGrad)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        </svg>
-        <span class="logo-text">DSDesk PRO MAX</span>
-        <span class="logo-version" style="color: var(--accent); font-weight: 700; text-shadow: 0 0 12px var(--accent-glow);">Version 4.0.0</span>
-        <span id="badge-installed" class="badge-installed hidden">✅ مثبت</span>
-      </div>
-      <div class="titlebar-actions">
-        <!-- Connection Status Indicator -->
-        <div class="connection-indicator" id="titlebar-connection">
-            <span class="indicator-dot offline"></span>
-            <span class="indicator-text">غير متصل</span>
-        </div>
-        <button id="btn-settings-home" class="titlebar-action-btn tooltip" data-tooltip="الإعدادات">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        </button>
-        <button id="btn-refresh" class="titlebar-action-btn tooltip" data-tooltip="تحديث">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-        </button>
-        <button id="btn-shortcuts" class="titlebar-action-btn tooltip" data-tooltip="اختصارات">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M6 16h12"/></svg>
-        </button>
-      </div>
+    <div class="titlebar-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" stroke-width="2">
+        <defs>
+          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#4DA3FF"/>
+            <stop offset="100%" style="stop-color:#2EE59D"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+      </svg>
+      <span class="gradient-text">DSDESK PRO MAX</span>
+      <span id="badge-installed" class="badge-installed hidden">✅ مثبت</span>
     </div>
     <div class="titlebar-controls">
-      <button id="btn-minimize" class="titlebar-btn" aria-label="تصغير">
-        <svg width="12" height="12" viewBox="0 0 12 12"><line x1="2" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </button>
-      <button id="btn-maximize" class="titlebar-btn" aria-label="تكبير">
-        <svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-      </button>
-      <button id="btn-close" class="titlebar-btn close" aria-label="إغلاق">
-        <svg width="12" height="12" viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </button>
+      <button id="btn-minimize" class="titlebar-btn"><i class="fas fa-minus"></i></button>
+      <button id="btn-maximize" class="titlebar-btn"><i class="fas fa-expand"></i></button>
+      <button id="btn-close" class="titlebar-btn close"><i class="fas fa-times"></i></button>
     </div>
   </header>
 
-  <!-- ═══════════════ Main App Container ═══════════════ -->
   <main class="app-container">
 
-    <!-- ─────────── HOME VIEW ─────────── -->
+    <!-- ─────────── DASHBOARD VIEW ─────────── -->
     <section class="view active" id="view-home">
-      <!-- Background decorations -->
-      <div class="bg-decoration">
-        <div class="bg-orb orb-1"></div>
-        <div class="bg-orb orb-2"></div>
-        <div class="bg-orb orb-3"></div>
-        <div class="bg-grid"></div>
-      </div>
-
-      <!-- Installation Promo Banner -->
-      <div id="install-banner" class="install-banner hidden">
-         <div class="banner-icon">🚀</div>
-         <div class="banner-text">
-            <h4>ثبّت DSDesk على هذا الجهاز</h4>
-            <p>للحصول على أداء أفضل، والوصول التلقائي عند بدء التشغيل.</p>
-         </div>
-         <button class="btn btn-primary btn-sm" id="btn-install-now">تثبيت الآن</button>
-         <button id="btn-close-banner" class="btn-icon">×</button>
-      </div>
-
-<div class="home-content">
-        <!-- Modern Dashboard -->
-        <div class="dashboard-container">
-          <!-- Connection Panel -->
-          <div class="connection-panel">
-            <div class="panel-header">
-              <h1 class="gradient-text">DSDesk PRO MAX</h1>
-              <p class="subtitle">اتصال آمن وسريع عن بُعد</p>
+      <div class="dashboard">
+        
+        <!-- Panel Left: My Identity & Quick Actions -->
+        <div class="panel-left">
+          <div class="id-card glass">
+            <h3 class="text-muted" style="font-size: 14px; margin-bottom: 12px;">جهازي الحالي</h3>
+            <div class="id-display-box">
+              <span class="id-value" id="device-id">--- --- ---</span>
+              <button id="btn-copy-id" class="tool-btn"><i class="far fa-copy"></i></button>
             </div>
-            
-            <!-- Quick Connect -->
-            <div class="quick-connect">
-              <div class="input-wrapper modern">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                <input type="text" id="remote-id" class="form-control" placeholder="أدخل معرّف الجهاز أو الرابط" maxlength="13" autocomplete="off">
+            <div class="password-display-box" style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <span class="text-muted" style="font-size: 12px;">كلمة المرور:</span>
+                <span id="device-password" style="font-family: monospace; margin-right: 8px;">••••••</span>
               </div>
-              <button type="submit" id="btn-connect" class="btn-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                <span>اتصال</span>
-              </button>
+              <div style="display: flex; gap: 4px;">
+                <button id="btn-toggle-pwd" class="tool-btn" style="width: 32px; height: 32px;"><i class="far fa-eye"></i></button>
+                <button id="btn-refresh-pwd" class="tool-btn" style="width: 32px; height: 32px;"><i class="fas fa-sync"></i></button>
+              </div>
             </div>
-            
-            <!-- Generate Link -->
-            <button class="btn-secondary full-width" id="btn-generate-link">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          </div>
+
+          <div class="glass" style="padding: 20px; border-radius: var(--radius-md);">
+            <h3>روابط سريعة</h3>
+            <button id="btn-generate-link" class="btn-start-session" style="background: var(--bg-card); border: 1px solid var(--border-subtle); margin-top: 16px; font-size: 14px;">
+              <i class="fas fa-link"></i>
               <span>إنشاء رابط آمن</span>
             </button>
-          </div>
-          
-          <!-- Device Info Card -->
-          <div class="device-card card glass">
-            <div class="card-header">
-              <div class="device-info">
-                <div class="device-icon">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                </div>
-                <div>
-                  <h2 id="device-hostname">جاري التحميل...</h2>
-                  <p class="card-desc" id="device-os-info" style="margin:0;">معلومات جهازك</p>
-                </div>
-              </div>
-              <div class="status-badge" id="status-badge">
-                <span class="status-dot"></span>
-                <span class="status-text" id="status-text">غير متصل</span>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="info-group">
-                <label>معرّف الجهاز (ID)</label>
-                <div class="id-display" id="id-display">
-                  <span class="id-text" id="device-id">--- --- ---</span>
-                  <button id="btn-copy-id" class="btn-icon tooltip" data-tooltip="نسخ">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                  </button>
-                </div>
-              </div>
-              <div class="info-group">
-                <label>كلمة المرور</label>
-                <div class="password-display">
-                  <span class="password-text" id="device-password">••••••</span>
-                  <div class="password-actions">
-                    <button id="btn-toggle-pwd" class="btn-icon">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </button>
-                    <button id="btn-refresh-pwd" class="btn-icon">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Recent Devices -->
-          <div class="recent-card card glass">
-            <div class="card-header compact">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <h3>الأجهزة الأخيرة</h3>
-            </div>
-            <div class="recent-list" id="recent-list">
-              <div class="empty-state">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/></svg>
-                <p>لا توجد اتصالات سابقة</p>
-              </div>
-            </div>
+            <button id="btn-settings-home" class="btn-start-session" style="background: transparent; border: 1px solid var(--border-subtle); margin-top: 8px; font-size: 14px;">
+              <i class="fas fa-cog"></i>
+              <span>إعدادات النظام</span>
+            </button>
           </div>
         </div>
-      </div>
-          <div class="card-header compact">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6" y2="6"/><line x1="6" y1="18" x2="6" y2="18"/>
-            </svg>
-            <h3>إعدادات الخادم (Signaling)</h3>
+
+        <!-- Panel Center: Main Action -->
+        <div class="panel-center">
+          <div class="hero-card glass-active">
+            <h1 class="gradient-text" style="font-size: 32px; text-align: center;">ابدأ جلسة جديدة</h1>
+            <p class="text-muted" style="text-align: center; margin-top: -16px;">أدخل معرّف الجهاز الذي تريد التحكم به</p>
+            
+            <input type="text" id="remote-id" class="input-session-id" placeholder="000 000 000" maxlength="13">
+            
+            <button id="btn-connect" class="btn-start-session">
+              <i class="fas fa-bolt"></i>
+              <span>اتصال فوري (Turbo Connect)</span>
+            </button>
           </div>
-          <div class="card-body">
-            <div class="input-group">
-              <label for="server-url">رابط السيرفر الحالي</label>
-              <div class="input-wrapper">
-                <input type="text" id="server-url" placeholder="http://localhost:3456" value="http://localhost:3456">
-                <button id="btn-save-server" class="btn-icon tooltip" data-tooltip="حفظ الرابط">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                </button>
+
+          <div class="glass" style="padding: 24px; border-radius: var(--radius-lg); flex: 1;">
+            <div class="recent-header">
+              <h3>الأجهزة الأخيرة</h3>
+              <span class="text-dim" style="font-size: 12px;">آخر 10 اتصالات</span>
+            </div>
+            <div class="recent-list" id="recent-list" style="margin-top: 16px;">
+              <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-dim);">
+                <i class="fas fa-history" style="font-size: 32px; margin-bottom: 12px; opacity: 0.2;"></i>
+                <p>لا توجد اتصالات حديثة</p>
               </div>
-              <p class="card-desc">أدخل الرابط العالمي للاتصال من خارج الشبكة.</p>
             </div>
           </div>
         </div>
 
-        <!-- Recent Connections -->
-        <div class="card glass recent-card" id="recent-card">
-          <div class="card-header compact">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <h3>الاتصالات الأخيرة</h3>
+        <!-- Panel Right: Security & Network -->
+        <div class="panel-right">
+          <div class="glass" style="padding: 20px; border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+              <i class="fas fa-shield-halved" style="color: var(--secondary);"></i>
+              <h3>حالة الحماية</h3>
+            </div>
+            <div class="recent-item">
+              <div class="device-status status-online"></div>
+              <div>
+                <div style="font-size: 13px;">تشفير AES-256</div>
+                <div class="text-dim" style="font-size: 11px;">مفعّل ونشط</div>
+              </div>
+            </div>
+            <div class="recent-item" style="margin-top: 8px;">
+              <div class="device-status status-online"></div>
+              <div>
+                <div style="font-size: 13px;">نظام منع الاختراق</div>
+                <div class="text-dim" style="font-size: 11px;">مفعّل (Sentinal v4)</div>
+              </div>
+            </div>
           </div>
-          <div class="recent-list" id="recent-list">
-            <div class="empty-state">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3">
-                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-              </svg>
-              <p>لا توجد اتصالات سابقة</p>
+
+          <div class="glass" style="padding: 20px; border-radius: var(--radius-md); flex: 1;">
+            <h3>الشبكة والاتصال</h3>
+            <div id="status-badge" style="margin-top: 16px; padding: 12px; border-radius: var(--radius-sm); background: rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px;">
+              <span class="device-status status-offline"></span>
+              <span id="status-text" class="text-muted">جاري فحص الاتصال...</span>
+            </div>
+            <div style="margin-top: 20px;">
+              <label class="text-dim" style="font-size: 12px;">سيرفر الإشارات:</label>
+              <div class="id-display-box" style="margin-top: 4px; padding: 8px; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <span id="server-url-display">localhost:8080</span>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
     </section>
 
-    <!-- ─────────── SESSION VIEW ─────────── -->
+    <!-- ─────────── REMOTE SESSION VIEW ─────────── -->
     <section class="view" id="view-session">
-      <div class="session-container">
-        <!-- Stealth Auto-Hide Trigger Area -->
-        <div class="stealth-trigger" id="stealth-trigger"></div>
+      <div class="remote-view">
         
-        <!-- Session Toolbar -->
-        <div class="session-toolbar auto-hide" id="session-toolbar">
-          <div class="toolbar-right">
-            <div class="session-indicator">
-              <span class="pulse-dot"></span>
-              <span id="session-target-id">متصل بـ ---</span>
-            </div>
-            <div class="session-stats">
-              <span class="stat" id="stat-cpu" title="استهلاك المعالج">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
-                <span>CPU: --%</span>
-              </span>
-              <span class="stat" id="stat-ram" title="استهلاك الذاكرة">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 19v2"/><path d="M10 19v2"/><path d="M14 19v2"/><path d="M18 19v2"/><path d="M8 11V9"/><path d="M12 11V9"/><path d="M16 11V9"/><rect x="3" y="11" width="18" height="8" rx="2"/></svg>
-                <span>RAM: --%</span>
-              </span>
-              <span class="stat" id="stat-latency">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>--ms</span>
-              </span>
-              <div class="connection-quality" id="connection-quality" title="جودة الاتصال">
-                <div class="quality-bar"></div>
-                <div class="quality-bar"></div>
-                <div class="quality-bar"></div>
-                <span class="quality-label">--</span>
-              </div>
-            </div>
-          </div>
-          <div class="toolbar-left">
-            <button id="btn-quality" class="toolbar-btn tooltip" data-tooltip="جودة الفيديو">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-              </svg>
-            </button>
-            <button id="btn-settings" class="toolbar-btn tooltip" data-tooltip="الإعدادات">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-              </svg>
-            </button>
-            <button id="btn-fullscreen" class="toolbar-btn tooltip" data-tooltip="ملء الشاشة">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
-              </svg>
-            </button>
-            <button id="btn-monitors-toggle" class="toolbar-btn tooltip" data-tooltip="تبديل الشاشة">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-              </svg>
-            </button>
-            <button id="btn-tasks-toggle" class="toolbar-btn tooltip" data-tooltip="مدير المهام">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 11l2 2 4-4"/><path d="M7 16h10"/><path d="M7 7h10"/>
-              </svg>
-            </button>
-            <button id="btn-terminal-toggle" class="toolbar-btn tooltip" data-tooltip="Terminal">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-              </svg>
-            </button>
-            <button id="btn-files-toggle" class="toolbar-btn tooltip" data-tooltip="نقل الملفات">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/>
-              </svg>
-            </button>
-            <button id="btn-chat-toggle" class="toolbar-btn tooltip" data-tooltip="محادثة">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-              </svg>
-              <span class="chat-badge hidden" id="chat-badge">0</span>
-            </button>
-            <div class="toolbar-divider"></div>
-            <button id="btn-power-menu" class="toolbar-btn tooltip" data-tooltip="خيارات الطاقة">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>
-              </svg>
-            </button>
-            <button id="btn-disconnect" class="toolbar-btn disconnect tooltip" data-tooltip="إنهاء الجلسة">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- System Pro Dashboard (Overlay Sidebar) -->
-        <div class="system-dashboard hidden" id="pro-dashboard">
-           <div class="dashboard-header">
-              <h3>لوحة تحكم النظام</h3>
-              <button id="btn-close-dashboard" class="btn-icon">×</button>
-           </div>
-           <div class="dashboard-content">
-              <div class="dash-item">
-                 <label>نظام التشغيل</label>
-                 <span id="dash-os">---</span>
-              </div>
-              <div class="dash-item">
-                 <label>المعالج</label>
-                 <div class="dash-progress"><div id="dash-cpu-bar" class="dash-bar"></div></div>
-                 <span id="dash-cpu-text">0%</span>
-              </div>
-              <div class="dash-item">
-                 <label>الذاكرة</label>
-                 <div class="dash-progress"><div id="dash-ram-bar" class="dash-bar"></div></div>
-                 <span id="dash-ram-text">0%</span>
-              </div>
-              <div class="dash-item">
-                 <label>المساحة</label>
-                 <div class="dash-progress"><div id="dash-disk-bar" class="dash-bar"></div></div>
-                 <span id="dash-disk-text">0%</span>
-              </div>
-           </div>
-        </div>
-
-<!-- Settings Modal - PRO MAX -->
-        <div class="modal hidden" id="settings-modal">
-           <div class="modal-content settings-content glass">
-              <div class="settings-tabs">
-                 <button class="settings-tab active" data-tab="general">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-                   عام
-                 </button>
-                 <button class="settings-tab" data-tab="video">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                    الصورة
-                 </button>
-                 <button class="settings-tab" data-tab="security">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    الحماية
-                 </button>
-                 <button class="settings-tab" data-tab="connection">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-                    الاتصال
-                 </button>
-                 <button class="settings-tab" data-tab="advanced">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-                    متقدم
-                 </button>
-              </div>
-              
-              <div class="settings-body">
-                 <!-- Tab: عام -->
-                 <div class="settings-tab-content active" id="tab-general">
-                    <div class="setting-group">
-                       <label>معرف الجهاز (ID)</label>
-                       <div class="setting-value" id="setting-device-id">--- --- ---</div>
-                    </div>
-                    <div class="setting-group">
-                       <label>اسم الجهاز</label>
-                       <input type="text" id="setting-device-name" class="setting-input" placeholder="اسم الجهاز">
-                    </div>
-                    <div class="setting-group">
-                       <label>بدء تلقائي عند التشغيل</label>
-                       <label class="switch-container small">
-                          <input type="checkbox" id="setting-autostart">
-                          <span class="switch-slider"></span>
-                       </label>
-                    </div>
-                    <div class="setting-group">
-                       <label>التشغيل في الخلفية</label>
-                       <label class="switch-container small">
-                          <input type="checkbox" id="setting-background">
-                          <span class="switch-slider"></span>
-                       </label>
-                    </div>
-                    <div class="setting-group">
-                       <label>التحقق بخطوتين (2FA)</label>
-                       <label class="switch-container small">
-                          <input type="checkbox" id="setting-2fa">
-                          <span class="switch-slider"></span>
-                       </label>
-                    </div>
-                 </div>
-                 
-                 <!-- Tab: الصورة -->
-                 <div class="settings-tab-content" id="tab-video">
-                    <div class="setting-group">
-                       <label>جودة الصورة</label>
-                       <div class="quality-presets">
-                          <button class="preset-btn" data-preset="balanced">⚡ متوازن</button>
-                          <button class="preset-btn" data-preset="fast">🚀 سريع</button>
-                          <button class="preset-btn" data-preset="quality">🎯 جودة</button>
-                          <button class="preset-btn active" data-preset="high">🔥 عالي</button>
-                          <button class="preset-btn" data-preset="ultra">💎Ultra</button>
-                          <button class="preset-btn" data-preset="4k">📺 4K</button>
-                       </div>
-                    </div>
-                    <div class="setting-group">
-                       <label>معدل الإطارات (FPS)</label>
-                       <div class="fps-selector large">
-                          <button class="fps-btn" data-fps="30">30</button>
-                          <button class="fps-btn active" data-fps="60">60</button>
-                          <button class="fps-btn" data-fps="90">90</button>
-                          <button class="fps-btn" data-fps="120">120</button>
-                       </div>
-                    </div>
-                    <div class="setting-group">
-                       <label>إظهار المؤشر</label>
-                       <label class="switch-container small">
-                          <input type="checkbox" id="setting-cursor" checked>
-                          <span class="switch-slider"></span>
-                       </label>
-                    </div>
-                    <div class="setting-group">
-                       <label>إظهار الماوس على الشاشة</label>
-                       <label class="switch-container small">
-                          <input type="checkbox" id="setting-remote-cursor" checked>
-                          <span class="switch-slider"></span>
-                       </label>
-                    </div>
-                    <div class="setting-group">
-                       <label>تسجيل الشاشة</label>
-                       <label class="switch-container small">
-                          <input type="checkbox" id="setting-recording">
-                          <span class="switch-slider"></span>
-                       </label>
-                    </div>
-                 </div>
-                 
-                 <!-- Tab: الحماية -->
-                 <div class="settings-tab-content" id="tab-security">
-                    <div class="setting-group">
-                       <label>كلمة المرور</label>
-                       <div class="password-manager">
-                          <input type="password" id="setting-password" class="setting-input" placeholder="كلمة المرور">
-                          <button id="btn-gen-password" class="btn-icon" title="توليد">
-                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3 3L18.5 7.5"/></svg>
-                          </button>
-                       </div>
-                    </div>
-                    <div class="setting-group">
-                       <label>الحماية مفعلة</label>
-                       <label class="switch-container small">
-                          <input type="checkbox" id="setting-password-enabled" checked>
-                          <span class="switch-slider"></span>
-                       </label>
-                    </div>
-                    <div class="setting-group">
-                       <label>الأجهزة الموثوقة</label>
-                       <div class="trusted-list" id="trusted-devices-list">
-                          <div class="empty-state small">لا توجد أجهزة موثوقة</div>
-                       </div>
-                    </div>
-                    <div class="setting-group">
-                       <label>قائمة IPs المسموحة (Whitelist)</label>
-                       <textarea id="setting-ip-whitelist" class="setting-textarea" placeholder="192.168.1.1&#10;10.0.0.1"></textarea>
-                    </div>
-                    <div class="setting-group">
-                       <label>تسجيل الجلسات</label>
-                       <label class="switch-container small">
-                          <input type="checkbox" id="setting-session-log">
-                          <span class="switch-slider"></span>
-                       </label>
-                    </div>
-                 </div>
-                 
-                 <!-- Tab: الاتصال -->
-                 <div class="settings-tab-content" id="tab-connection">
-                    <div class="setting-group">
-                       <label>خادم الإشارات (Signaling)</label>
-                       <input type="text" id="setting-server" class="setting-input" placeholder="https://dsdesk.onrender.com">
-                    </div>
-                    <div class="setting-group">
-                       <label>خادم TURN</label>
-                       <input type="text" id="setting-turn" class="setting-input" placeholder="turn:yourturn.com:3478">
-                    </div>
-                    <div class="setting-group">
-                       <label>用户名 TURN</label>
-                       <input type="text" id="setting-turn-user" class="setting-input" placeholder="username">
-                    </div>
-                    <div class="setting-group">
-                       <label>كلمة مرور TURN</label>
-                       <input type="password" id="setting-turn-pass" class="setting-input" placeholder="password">
-                    </div>
-                    <div class="setting-group">
-                       <label>Mode الاتصال</label>
-                       <select id="setting-connection-mode" class="setting-select">
-                          <option value="auto">تلقائي (UDP + TCP)</option>
-                          <option value="udp">UDP فقط</option>
-                          <option value="tcp">TCP فقط (للجدران النارية)</option>
-                          <option value="relay">TURN فقط (Relay)</option>
-                       </select>
-                    </div>
-                    <div class="setting-group">
-                       <label>Port Forward</label>
-                       <input type="number" id="setting-port" class="setting-input small" placeholder="8000">
-                    </div>
-                 </div>
-                 
-                 <!-- Tab: متقدم -->
-                 <div class="settings-tab-content" id="tab-advanced">
-                    <div class="setting-group">
-                       <label>Bitrate الأقصى (Mbps)</label>
-                       <input type="range" id="setting-bitrate" min="1" max="60" value="30" class="setting-range">
-                       <span class="range-value" id="bitrate-value">30 Mbps</span>
-                    </div>
-                    <div class="setting-group">
-                       <label>ضغط الصوت</label>
-                       <select id="setting-audio" class="setting-select">
-                          <option value="off">معطل</option>
-                          <option value="on">مفعّل</option>
-                          <option value="voip">VOIP فقط</option>
-                       </select>
-                    </div>
-                    <div class="setting-group">
-                       <label>Codec الفيديو</label>
-                       <select id="setting-codec" class="setting-select">
-                          <option value="auto">تلقائي</option>
-                          <option value="h264">H.264</option>
-                          <option value="vp9">VP9</option>
-                          <option value="av1">AV1</option>
-                       </select>
-                    </div>
-                    <div class="setting-group">
-                       <label>Latency Mode</label>
-                       <select id="setting-latency" class="setting-select">
-                          <option value="low">منخفض (لألعاب)</option>
-                          <option value="normal" selected>عادي</option>
-                          <option value="high">عالي (للفيديو)</option>
-                       </select>
-                    </div>
-                    <div class="setting-group">
-                       <button class="btn btn-danger" id="btn-reset-settings">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                          إعادة تعيين الافتراضي
-                       </button>
-                    </div>
-                 </div>
-              </div>
-              
-              <div class="modal-footer">
-                 <button id="btn-save-settings" class="btn-primary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                    حفظ
-                 </button>
-                 <button id="btn-close-settings" class="btn-secondary">إلغاء</button>
-              </div>
-           </div>
-        </div>
-
-        <!-- Power Menu Modal Content (Hidden by default) -->
-        <div class="modal hidden" id="power-modal">
-           <div class="modal-content glass">
-              <h2>خيارات الطاقة البعيدة</h2>
-              <p>اختر الإجراء الذي تريد تنفيذه على الجهاز البعيد:</p>
-              <div class="power-options-grid">
-                 <button class="btn btn-secondary" id="action-lock">🔐 قفل الشاشة</button>
-                 <button class="btn btn-secondary" id="action-reboot">🔄 إعادة التشغيل</button>
-                 <button class="btn btn-danger" id="action-shutdown">🛑 إيقاف التشغيل</button>
-              </div>
-              <button class="btn btn-ghost" onclick="document.getElementById('power-modal').classList.add('hidden')">إلغاء</button>
-           </div>
-        </div>
-
-        <!-- Remote Screen Display -->
-        <div class="remote-screen" id="remote-screen">
+        <!-- Video Layer -->
+        <div class="remote-canvas-container">
           <video id="remote-video" autoplay muted playsinline></video>
           
-          <!-- Elite Tools Toggle -->
-          <button class="btn-elite-tools" id="btn-toggle-admin" title="أدوات المدير"><i class="fas fa-tools"></i></button>
-          
-          <div id="virtual-cursor" class="virtual-cursor"></div>
-          
-          <!-- Pro Elite Admin Center -->
-          <div class="pro-admin-sidebar" id="admin-sidebar">
-            <div class="sidebar-header">
-              <span class="sidebar-title">مركز التحكم الاحترافي</span>
-              <button class="btn-icon" id="btn-close-admin"><i class="fas fa-times"></i></button>
-            </div>
-            
-            <div class="sidebar-section">
-              <label class="section-label">أدوات الطاقة</label>
-              <div class="power-grid">
-                <button class="btn-power" id="btn-remote-restart" title="إعادة تشغيل"><i class="fas fa-sync"></i></button>
-                <button class="btn-power" id="btn-remote-lock" title="قفل"><i class="fas fa-lock"></i></button>
-                <button class="btn-power btn-danger" id="btn-remote-shutdown" title="إيقاف التشغيل"><i class="fas fa-power-off"></i></button>
-              </div>
-            </div>
-
-            <div class="sidebar-section">
-              <label class="section-label">مدير المهام (Task Manager)</label>
-              <div class="task-list-container">
-                <table class="pro-table" id="remote-task-table">
-                  <thead>
-                    <tr>
-                      <th>الاسم</th>
-                      <th>PID</th>
-                      <th>إجراء</th>
-                    </tr>
-                  </thead>
-                  <tbody id="task-body">
-                    <!-- Tasks injected here -->
-                  </tbody>
-                </table>
-              </div>
-              <button class="btn-secondary btn-sm full-width mt-10" id="btn-refresh-tasks">تحديث القائمة</button>
-            </div>
+          <!-- Performance Stats (Overlay) -->
+          <div class="perf-overlay glass">
+            <div class="perf-stat">Latency: <span id="stat-latency">--ms</span></div>
+            <div class="perf-stat">FPS: <span id="stat-fps">--</span></div>
+            <div class="perf-stat">Bandwidth: <span id="stat-bandwidth">-- Mbps</span></div>
           </div>
 
-          <!-- Pro System Dashboard Overlay (Simplified) -->
+          <!-- Multi-user Placeholder -->
+          <div id="remote-cursors-container"></div>
+        </div>
 
-          <div class="connecting-overlay" id="connecting-overlay">
-            <div class="spinner-lg"></div>
-            <p class="connecting-text">جاري الاتصال بالجهاز البعيد...</p>
-            <p class="connecting-sub" id="connecting-status">إنشاء اتصال P2P</p>
+        <!-- Sidebar Toolbar (Collapsible) -->
+        <div class="toolbar-v glass">
+          <button class="tool-btn tooltip" data-tooltip="نقل الملفات" id="btn-files-toggle"><i class="fas fa-file-export"></i></button>
+          <button class="tool-btn tooltip" data-tooltip="مدير المهام" id="btn-tasks-toggle"><i class="fas fa-tasks"></i></button>
+          <button class="tool-btn tooltip" data-tooltip="الطرفية" id="btn-terminal-toggle"><i class="fas fa-terminal"></i></button>
+          <button class="tool-btn tooltip" data-tooltip="محادثة" id="btn-chat-toggle"><i class="fas fa-comments"></i></button>
+          <div style="height: 1px; background: var(--border-subtle); margin: 4px 0;"></div>
+          <button class="tool-btn tooltip" data-tooltip="لقطة شاشة" id="btn-screenshot"><i class="fas fa-camera"></i></button>
+          <button class="tool-btn tooltip" data-tooltip="الإعدادات" id="btn-settings-remote"><i class="fas fa-sliders-h"></i></button>
+          <div style="height: 1px; background: var(--border-subtle); margin: 4px 0;"></div>
+          <button class="tool-btn disconnect tooltip" data-tooltip="قطع الاتصال" id="btn-disconnect"><i class="fas fa-power-off"></i></button>
+        </div>
+
+        <!-- AI Assistance Sidebar -->
+        <div class="ai-panel glass" id="ai-panel">
+          <div class="ai-header">
+            <i class="fas fa-brain"></i>
+            <span>AI ASSISTANT</span>
+          </div>
+          <div class="ai-suggestion" id="ai-suggestion">
+            تم اكتشاف تأخر في الشبكة (320ms). هل ترغب في تحسين الاتصال؟
+          </div>
+          <button class="btn-ai-action" id="btn-ai-optimize">تحسين الاتصال (Optimize)</button>
+          <div class="ai-suggestion" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border-right-color: var(--border-subtle);">
+            الجلسة مشفرة بالكامل.
           </div>
         </div>
 
-        <!-- Chat Panel -->
-        <aside class="chat-panel hidden" id="chat-panel">
-          <div class="chat-header">
-            <h3>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-              </svg>
-              محادثة
-            </h3>
-            <button id="btn-close-chat" class="btn-icon">
-              <svg width="16" height="16" viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </button>
-          </div>
-          <div class="chat-messages" id="chat-messages">
-            <div class="chat-empty">
-              <p>ابدأ محادثة مع الطرف الآخر</p>
-            </div>
-          </div>
-          <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="اكتب رسالة..." autocomplete="off">
-            <button id="btn-send-chat" class="btn-icon send-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-              </svg>
-            </button>
-          </div>
-        </aside>
+      </div>
 
-        <!-- Files Panel -->
-        <aside class="chat-panel hidden" id="files-panel">
-          <div class="chat-header">
-            <h3>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/>
-              </svg>
-              نقل الملفات
-            </h3>
-            <button id="btn-close-files" class="btn-icon">
-              <svg width="16" height="16" viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </button>
-          </div>
-          <div class="file-transfer-area">
-            <div class="drop-zone" id="drop-zone">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <p>اسحب الملفات هنا للإرسال</p>
-              <input type="file" id="file-selector" class="hidden" multiple>
-            </div>
-            <div class="transfer-list" id="transfer-list">
-              <!-- Transfers will appear here -->
-            </div>
-          </div>
-        </aside>
-
-        <!-- Tasks Panel -->
-        <aside class="chat-panel hidden" id="tasks-panel">
-          <div class="chat-header">
-            <h3>مدير المهام</h3>
-            <button id="btn-close-tasks" class="btn-icon">
-              <svg width="16" height="16" viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </button>
-          </div>
-          <div class="task-manager-list" id="task-list-container">
-            <div class="loading-spinner"></div>
-          </div>
-        </aside>
-
-        <!-- Terminal Panel -->
-        <aside class="chat-panel hidden" id="terminal-panel">
-          <div class="chat-header">
-            <h3>الطرفية (Terminal)</h3>
-            <button id="btn-close-terminal" class="btn-icon">
-              <svg width="16" height="16" viewBox="0 0 12 12"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </button>
-          </div>
-          <div class="terminal-container">
-            <div id="terminal-output" class="terminal-output"></div>
-            <div class="terminal-input-line">
-              <span>> </span>
-              <input type="text" id="terminal-input" spellcheck="false" autocomplete="off">
-            </div>
-          </div>
-        </aside>
-
-        <!-- Monitor Picker Modal -->
-        <div class="modal hidden" id="monitor-modal">
-          <div class="modal-content glass">
-            <h2>اختر الشاشة</h2>
-            <div class="monitor-grid" id="monitor-grid">
-              <!-- Monitors will load here -->
-            </div>
-            <div class="modal-actions">
-              <button class="btn btn-secondary" onclick="document.getElementById('monitor-modal').classList.add('hidden')">إلغاء</button>
-            </div>
-          </div>
+      <!-- Connecting Overlay -->
+      <div class="modal-overlay active" id="connecting-overlay" style="display: none;">
+        <div class="modal-box glass" style="text-align: center;">
+          <div class="spinner" style="width: 50px; height: 50px; border: 4px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+          <h2 id="connecting-status">جاري إنشاء الاتصال...</h2>
+          <p class="text-dim">تأمين نفق P2P مشفر</p>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- ═══════════════ Connection Request Modal ═══════════════ -->
-  <div class="modal-overlay hidden" id="modal-request">
-    <div class="modal glass">
-      <div class="modal-glow"></div>
-      <div class="modal-icon pulse-ring">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-        </svg>
+  <!-- ═══════════════ Modals ═══════════════ -->
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-box glass settings-container">
+      <div class="settings-nav">
+        <div class="nav-item active" data-tab="general">العامة</div>
+        <div class="nav-item" data-tab="performance">الأداء</div>
+        <div class="nav-item" data-tab="security">الأمان</div>
+        <div class="nav-item" data-tab="appearance">المظهر</div>
+        <div class="nav-item" data-tab="shortcuts">الاختصارات</div>
       </div>
+      <div class="settings-content">
+        <div class="tab-content" id="tab-general">
+          <h2>الإعدادات العامة</h2>
+          <div style="margin-top: 24px;">
+            <label class="text-muted">اسم الجهاز</label>
+            <input type="text" id="setting-device-name" class="input-session-id" style="font-size: 14px; text-align: right; margin-top: 8px;">
+          </div>
+          <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+            <span>بدء التشغيل مع الويندوز</span>
+            <input type="checkbox" id="setting-autostart">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File Transfer Modal -->
+  <div class="modal-overlay" id="files-modal">
+    <div class="modal-box glass file-transfer-modal">
+      <div style="padding: 16px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between;">
+        <h3>نقل الملفات الذكي</h3>
+        <button onclick="document.getElementById('files-modal').classList.remove('active')" class="tool-btn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="file-panes">
+        <div class="file-pane">
+          <div class="text-muted" style="font-size: 12px;">جهازي (Local)</div>
+          <div class="file-list" id="local-files">
+            <!-- List -->
+          </div>
+        </div>
+        <div class="file-pane">
+          <div class="text-muted" style="font-size: 12px;">الجهاز البعيد (Remote)</div>
+          <div class="file-list" id="remote-files">
+            <!-- List -->
+          </div>
+        </div>
+      </div>
+      <div style="padding: 16px; background: rgba(0,0,0,0.2);">
+        <div id="transfer-progress" style="height: 4px; background: var(--border-subtle); border-radius: 2px; overflow: hidden;">
+          <div style="width: 0%; height: 100%; background: var(--secondary);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Modal -->
+  <div class="modal-overlay" id="modal-request">
+    <div class="modal-box glass" style="text-align: center; border-top: 4px solid var(--primary);">
+      <i class="fas fa-user-shield" style="font-size: 48px; color: var(--primary); margin-bottom: 20px;"></i>
       <h3>طلب اتصال وارد</h3>
-      <p class="modal-desc">الجهاز <strong id="request-from-id">---</strong> يطلب الاتصال بجهازك</p>
+      <p class="text-muted" style="margin-top: 10px;">الجهاز <strong id="request-from-id" style="color: var(--primary);">---</strong> يطلب التحكم بجهازك</p>
       
-      <div class="trust-option">
-        <label class="checkbox-container">
-          <input type="checkbox" id="check-trust-device">
-          <span class="checkmark"></span>
-          الموافقة التلقائية مستقبلاً (دخول سريع)
-        </label>
-      </div>
-
-      <!-- Permission Sentinel Grid -->
-      <div class="permissions-sentinel">
-        <label class="sentinel-label">صلاحيات الجلسة:</label>
-        <div class="sentinel-grid">
-          <div class="sentinel-item active" id="perm-mouse" title="التحكم بالماوس">
-            <i class="fas fa-mouse-pointer"></i>
-            <span>ماوس</span>
-          </div>
-          <div class="sentinel-item active" id="perm-keyboard" title="لوحة المفاتيح">
-            <i class="fas fa-keyboard"></i>
-            <span>كيبورد</span>
-          </div>
-          <div class="sentinel-item active" id="perm-clipboard" title="تزامن الحافظة">
-            <i class="fas fa-paste"></i>
-            <span>حافظة</span>
-          </div>
-          <div class="sentinel-item" id="perm-files" title="نقل الملفات">
-            <i class="fas fa-file-export"></i>
-            <span>ملفات</span>
-          </div>
+      <div class="permissions-sentinel" style="margin-top: 24px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: var(--radius-md);">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: right;">
+          <div class="sentinel-item active" style="padding: 8px; font-size: 12px;"><i class="fas fa-mouse"></i> ماوس</div>
+          <div class="sentinel-item active" style="padding: 8px; font-size: 12px;"><i class="fas fa-keyboard"></i> لوحة مفاتيح</div>
+          <div class="sentinel-item" style="padding: 8px; font-size: 12px;"><i class="fas fa-paste"></i> حافظة</div>
+          <div class="sentinel-item" style="padding: 8px; font-size: 12px;"><i class="fas fa-file-import"></i> ملفات</div>
         </div>
       </div>
 
-      <div class="modal-actions">
-        <button id="btn-accept" class="btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          قبول
-        </button>
-        <button id="btn-reject" class="btn-secondary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          رفض
-        </button>
+      <div style="margin-top: 32px; display: flex; gap: 12px;">
+        <button id="btn-accept" class="btn-start-session" style="flex: 1; padding: 12px;">قبول</button>
+        <button id="btn-reject" class="btn-start-session" style="flex: 1; padding: 12px; background: transparent; border: 1px solid var(--danger); color: var(--danger);">رفض</button>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════ Toast Notification Container ═══════════════ -->
-  <div id="toast-container" class="toast-container"></div>
+  <!-- Toast Container -->
+  <div id="toast-container" style="position: fixed; bottom: 24px; left: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 10px;"></div>
 
-  <!-- Keyboard Shortcuts Help Modal -->
-  <div class="modal hidden" id="shortcuts-modal">
-    <div class="modal-content glass shortcuts-content">
-      <div class="modal-header">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M6 16h12"/></svg>
-        <h2>اختصارات لوحة المفاتيح</h2>
-      </div>
-      <div class="shortcuts-body">
-        <div class="shortcut-group">
-          <h3>الاتصال</h3>
-          <div class="shortcut-item">
-            <span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd></span>
-            <span class="shortcut-desc">فتح/إغلاق لوحة التصحيح</span>
-          </div>
-          <div class="shortcut-item">
-            <span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd></span>
-            <span class="shortcut-desc">فتح المحادثة</span>
-          </div>
-        </div>
-        <div class="shortcut-group">
-          <h3>أدوات التحكم</h3>
-          <div class="shortcut-item">
-            <span class="shortcut-keys"><kbd>F11</kbd></span>
-            <span class="shortcut-desc">ملء الشاشة</span>
-          </div>
-          <div class="shortcut-item">
-            <span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Del</kbd></span>
-            <span class="shortcut-desc">إنهاء الجلسة</span>
-          </div>
-          <div class="shortcut-item">
-            <span class="shortcut-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></span>
-            <span class="shortcut-desc">فتح الطرفية</span>
-          </div>
-        </div>
-        <div class="shortcut-group">
-          <h3>النافذة</h3>
-          <div class="shortcut-item">
-            <span class="shortcut-keys"><kbd>?</kbd></span>
-            <span class="shortcut-desc">عرض المساعدة</span>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="btn-close-shortcuts" class="btn-secondary">إغلاق</button>
-      </div>
-    </div>
-  </div>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: white;
+      box-shadow: var(--shadow-lg);
+      animation: slideIn 0.3s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .toast.success { border-left: 4px solid var(--secondary); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast.warning { border-left: 4px solid var(--warning); }
+    @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  </style>
 
-  <!-- ═══════════════ Scripts ═══════════════ -->
-  <script src="js/socket.io.min.js"></script>
-  <script src="js/signaling.js"></script>
-  <script src="js/webrtc.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/webrtc.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/signaling.js"></script>
-  <script src="js/ai-engine.js"></script>
-  <script src="js/collaboration.js"></script>
-  <script src="js/enterprise.js"></script>
+  <script src="js/webrtc.js"></script>
   <script src="js/app.js"></script>
-
-  <!-- ═══════════════ Debugging Console (HIDDEN BY DEFAULT IN PRODUCTION) ═══════════════ -->
-  <div id="debug-overlay" class="hidden" style="position:fixed; bottom:0; left:0; right:0; height:150px; background:rgba(0,0,0,0.95); border-top:2px solid #00f2fe; color:#00f2fe; font-family:monospace; padding:10px; font-size:11px; overflow-y:auto; z-index:9999; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
-    <div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; margin-bottom:5px; padding-bottom:3px;">
-      <span>[DSDesk Diagnostic Console]</span>
-      <div style="display:flex; gap:10px;">
-        <button id="btn-copy-logs" style="background:none; border:1px solid #00f2fe; color:#00f2fe; cursor:pointer; font-size:9px; padding:2px 5px;">COPY LOGS</button>
-        <button onclick="document.getElementById('debug-overlay').classList.add('hidden')" style="background:none; border:none; color:#fff; cursor:pointer; font-size:11px;">[X]</button>
-      </div>
-    </div>
-    <div id="debug-content">App Initialized...</div>
-  </div>
-  <button id="btn-show-debug" style="position:fixed; bottom:2px; left:2px; opacity:0.1; font-size:8px; background:none; border:none; color:#fff; cursor:pointer; z-index:10000;">DEBUG</button>
-
 </body>
 </html>
